@@ -1,7 +1,15 @@
 import React from 'react';
 
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  House,
+  UsersRound,
+  BarChart3,
+  Trophy,
+  Settings,
+} from 'lucide-react-native';
+
+import COLORS from '../constants/colors';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -13,85 +21,129 @@ import SettingsScreen from '../screens/Setting/SettingScreen';
 const Tab = createBottomTabNavigator();
 
 const BottomTabs = () => {
+  const theme = COLORS;
+
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
 
-        tabBarStyle: {
-          backgroundColor: '#111C2E',
-          borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 20,
+        tabBarHideOnKeyboard: true,
 
+        tabBarStyle: {
+          backgroundColor: theme.card,
+          borderTopWidth: 1,
+          borderTopColor: theme.border,
+
+          height: 72,
+
+          paddingBottom: 10,
+          paddingTop: 8,
+
+          position: 'absolute',
+
+          left: 12,
+          right: 12,
+          bottom: 12,
+
+          borderRadius: 22,
+
+          elevation: 10,
+
+          shadowOffset: {
+            width: 0,
+            height: 0,
+          },
+
+          shadowOpacity: 0.35,
+
+          shadowRadius: 10,
         },
 
-        tabBarActiveTintColor: '#22C55E',
+        tabBarActiveTintColor: theme.primary,
 
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarInactiveTintColor: theme.subText,
 
         tabBarLabelStyle: {
-          fontSize: 15,
-          fontWeight: '800',
+          fontSize: 12,
+          fontWeight: '700',
+          marginBottom: 4,
         },
 
-        tabBarIcon: ({color, size}) => {
-          let iconName = '';
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
+
+        sceneStyle: {
+          backgroundColor: theme.background,
+        },
+
+        tabBarIcon: ({ color, focused }) => {
+          const iconSize = focused ? 26 : 22;
 
           if (route.name === 'Home') {
-            iconName = 'home';
+            return (
+              <House
+                size={iconSize}
+                color={color}
+                strokeWidth={focused ? 2.8 : 2.2}
+              />
+            );
           }
 
-          else if (route.name === 'Players') {
-            iconName = 'people';
+          if (route.name === 'Players') {
+            return (
+              <UsersRound
+                size={iconSize}
+                color={color}
+                strokeWidth={focused ? 2.8 : 2.2}
+              />
+            );
           }
 
-          else if (route.name === 'Dashboard') {
-            iconName = 'stats-chart';
+          if (route.name === 'Dashboard') {
+            return (
+              <BarChart3
+                size={iconSize}
+                color={color}
+                strokeWidth={focused ? 2.8 : 2.2}
+              />
+            );
           }
 
-          else if (route.name === 'Matches') {
-            iconName = 'trophy';
+          if (route.name === 'Matches') {
+            return (
+              <Trophy
+                size={iconSize}
+                color={color}
+                strokeWidth={focused ? 2.8 : 2.2}
+              />
+            );
           }
 
-          else if (route.name === 'Settings') {
-            iconName = 'settings';
+          if (route.name === 'Settings') {
+            return (
+              <Settings
+                size={iconSize}
+                color={color}
+                strokeWidth={focused ? 2.8 : 2.2}
+              />
+            );
           }
 
-          return (
-            <Ionicons
-              name={iconName}
-              size={size}
-              color={color}
-            />
-          );
+          return null;
         },
-      })}>
-      
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-      />
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
 
-      <Tab.Screen
-        name="Players"
-        component={PlayersScreen}
-      />
+      <Tab.Screen name="Players" component={PlayersScreen} />
 
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-      />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
 
-      <Tab.Screen
-        name="Matches"
-        component={MatchesScreen}
-      />
+      <Tab.Screen name="Matches" component={MatchesScreen} />
 
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-      />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 };

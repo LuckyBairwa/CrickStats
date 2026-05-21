@@ -1,4 +1,7 @@
-import React, {useMemo, useState} from 'react';
+// src/screens/Dashboard/DashboardScreen.tsx 😎🔥
+
+import React, { useEffect, useMemo, useState } from 'react';
+
 import {
   View,
   Text,
@@ -7,79 +10,107 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import {
+  Trophy,
+  Flame,
+  Medal,
+  Target,
+  Shield,
+  CircleDot,
+  Award,
+  Star,
+  ChartNoAxesCombined,
+  AlertCircle,
+} from 'lucide-react-native';
+
+import Animated, {
+  FadeInDown,
+  FadeInRight,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+
+import COLORS from '../../constants/colors';
+
+import { getPlayers } from '../../api/playerApi';
 
 const DashboardScreen = () => {
-  // Active Category 😎
-  const [activeCategory, setActiveCategory] =
-    useState('Most Runs');
+  const theme = COLORS;
 
-  // Dummy Players Data
-  const players = [
-    {
-      id: '1',
-      name: 'Virat',
-      runs: 1540,
-      sixes: 89,
-      fours: 120,
-      wickets: 12,
-      economy: 6.5,
-      catches: 24,
-      dotBalls: 210,
-      centuries: 9,
-      halfCenturies: 18,
-      matches: 16,
-    },
+  const navigation = useNavigation<any>();
 
-    {
-      id: '2',
-      name: 'Rohit',
-      runs: 1320,
-      sixes: 110,
-      fours: 98,
-      wickets: 6,
-      economy: 7.4,
-      catches: 18,
-      dotBalls: 180,
-      centuries: 7,
-      halfCenturies: 14,
-      matches: 16,
-    },
+  const [loading, setLoading] = useState(true);
 
-    {
-      id: '3',
-      name: 'Bumrah',
-      runs: 320,
-      sixes: 7,
-      fours: 18,
-      wickets: 65,
-      economy: 4.2,
-      catches: 11,
-      dotBalls: 420,
-      centuries: 0,
-      halfCenturies: 0,
-      matches: 16,
-    },
+  const [players, setPlayers] = useState<any[]>([]);
 
-    {
-      id: '4',
-      name: 'Gill',
-      runs: 980,
-      sixes: 48,
-      fours: 88,
-      wickets: 4,
-      economy: 8.2,
-      catches: 15,
-      dotBalls: 150,
-      centuries: 3,
-      halfCenturies: 11,
-      matches: 16,
-    },
-  ];
+  const [activeCategory, setActiveCategory] = useState('Most Runs');
 
-  // Categories
+  // 😎 Animated Background
+  const glow = useSharedValue(0.7);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withTiming(1, {
+        duration: 2500,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+      true,
+    );
+
+    return () => {
+      glow.value = 0;
+    };
+  }, []);
+
+  const glowStyle = useAnimatedStyle(() => {
+    return {
+      opacity: glow.value,
+      transform: [
+        {
+          scale: glow.value,
+        },
+      ],
+    };
+  });
+
+  // 😎 Fetch Players
+  const fetchPlayers = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getPlayers();
+
+      const data = Array.isArray(response?.players)
+        ? response.players
+        : Array.isArray(response)
+        ? response
+        : [];
+
+      setPlayers(data);
+    } catch (error) {
+      console.log('Dashboard Fetch Error 😭', error);
+
+      setPlayers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  // 😎 Categories
   const categories = [
     'Most Runs',
     'Most 6s',
@@ -88,188 +119,354 @@ const DashboardScreen = () => {
     'Best Economy',
     'Most Catches',
     'Most Dot Balls',
-    'Most 100s',
-    'Most 50s',
+    'Most 30s',
+    'Most 40s',
   ];
 
-  // Sorting Logic 😎
+  // 😎 Dynamic Sorting
   const sortedPlayers = useMemo(() => {
     let sorted = [...players];
 
     switch (activeCategory) {
       case 'Most Runs':
-        return sorted.sort((a, b) => b.runs - a.runs);
+        return sorted.sort((a, b) => (b?.runs || 0) - (a?.runs || 0));
 
       case 'Most 6s':
-        return sorted.sort((a, b) => b.sixes - a.sixes);
+        return sorted.sort((a, b) => (b?.sixes || 0) - (a?.sixes || 0));
 
       case 'Most 4s':
-        return sorted.sort((a, b) => b.fours - a.fours);
+        return sorted.sort((a, b) => (b?.fours || 0) - (a?.fours || 0));
 
       case 'Most Wickets':
-        return sorted.sort((a, b) => b.wickets - a.wickets);
+        return sorted.sort((a, b) => (b?.wickets || 0) - (a?.wickets || 0));
 
       case 'Best Economy':
-        return sorted.sort((a, b) => a.economy - b.economy);
+        return sorted.sort((a, b) => (a?.economy || 999) - (b?.economy || 999));
 
       case 'Most Catches':
-        return sorted.sort((a, b) => b.catches - a.catches);
+        return sorted.sort((a, b) => (b?.catches || 0) - (a?.catches || 0));
 
       case 'Most Dot Balls':
-        return sorted.sort((a, b) => b.dotBalls - a.dotBalls);
+        return sorted.sort((a, b) => (b?.dotBalls || 0) - (a?.dotBalls || 0));
 
       case 'Most 100s':
-        return sorted.sort(
-          (a, b) => b.centuries - a.centuries,
-        );
+        return sorted.sort((a, b) => (b?.centuries || 0) - (a?.centuries || 0));
 
       case 'Most 50s':
         return sorted.sort(
-          (a, b) =>
-            b.halfCenturies - a.halfCenturies,
+          (a, b) => (b?.halfCenturies || 0) - (a?.halfCenturies || 0),
         );
 
       default:
         return sorted;
     }
-  }, [activeCategory]);
+  }, [players, activeCategory]);
 
-  // Get Value
+  // 😎 Get Dynamic Value
   const getValue = (player: any) => {
     switch (activeCategory) {
       case 'Most Runs':
-        return `${player.runs} Runs`;
+        return `${player?.runs || 0} Runs`;
 
       case 'Most 6s':
-        return `${player.sixes} Sixes`;
+        return `${player?.sixes || 0} Sixes`;
 
       case 'Most 4s':
-        return `${player.fours} Fours`;
+        return `${player?.fours || 0} Fours`;
 
       case 'Most Wickets':
-        return `${player.wickets} Wickets`;
+        return `${player?.wickets || 0} Wickets`;
 
       case 'Best Economy':
-        return `${player.economy} Economy`;
+        return `${player?.economy || 0} Economy`;
 
       case 'Most Catches':
-        return `${player.catches} Catches`;
+        return `${player?.catches || 0} Catches`;
 
       case 'Most Dot Balls':
-        return `${player.dotBalls} Dot Balls`;
+        return `${player?.dotBalls || 0} Dot Balls`;
 
       case 'Most 100s':
-        return `${player.centuries} Centuries`;
+        return `${player?.centuries || 0} Centuries`;
 
       case 'Most 50s':
-        return `${player.halfCenturies} Half Centuries`;
+        return `${player?.halfCenturies || 0} Half Centuries`;
 
       default:
-        return '';
+        return '0';
     }
   };
 
-  // Ranking Medal 😎
-  const getRankColor = (index: number) => {
-    if (index === 0) return '#FFD700';
-    if (index === 1) return '#C0C0C0';
-    if (index === 2) return '#CD7F32';
+  // 😎 Dynamic Category Icons
+  const getCategoryIcon = () => {
+    switch (activeCategory) {
+      case 'Most Runs':
+        return ChartNoAxesCombined;
 
-    return '#22C55E';
+      case 'Most 6s':
+        return Flame;
+
+      case 'Most 4s':
+        return Target;
+
+      case 'Most Wickets':
+        return Trophy;
+
+      case 'Best Economy':
+        return Shield;
+
+      case 'Most Catches':
+        return Award;
+
+      case 'Most Dot Balls':
+        return CircleDot;
+
+      case 'Most 100s':
+        return Medal;
+
+      case 'Most 50s':
+        return Star;
+
+      default:
+        return Trophy;
+    }
   };
 
+  // 😎 Rank Colors
+  const getRankColor = (index: number) => {
+    if (index === 0) {
+      return '#FFD700';
+    }
+
+    if (index === 1) {
+      return '#C0C0C0';
+    }
+
+    if (index === 2) {
+      return '#CD7F32';
+    }
+
+    return theme.primary;
+  };
+
+  // 😎 Loading
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={theme.primary} />
+
+        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+      </View>
+    );
+  }
+
+  const CategoryIcon = getCategoryIcon();
+
   return (
-    <View style={styles.container}>
-      
-      {/* Header */}
-      <Text style={styles.header}>
-        📊 Dashboard
-      </Text>
-
-      {/* Horizontal Categories */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryContainer}>
-        
-        {categories.map((item, index) => {
-          const isActive =
-            activeCategory === item;
-
-          return (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={0.8}
-              style={styles.categoryButton}
-              onPress={() =>
-                setActiveCategory(item)
-              }>
-              
-              <Text
-                style={[
-                  styles.categoryText,
-                  isActive && styles.activeText,
-                ]}>
-                {item}
-              </Text>
-
-              {isActive && (
-                <View style={styles.activeLine} />
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* Player Rankings */}
-      <FlatList
-        data={sortedPlayers}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 30,
-        }}
-        renderItem={({item, index}) => (
-          <View style={styles.playerCard}>
-            
-            {/* Rank */}
-            <View
-              style={[
-                styles.rankCircle,
-                {
-                  backgroundColor:
-                    getRankColor(index),
-                },
-              ]}>
-              <Text style={styles.rankText}>
-                {index + 1}
-              </Text>
-            </View>
-
-            {/* Player Info */}
-            <View style={{flex: 1}}>
-              <Text style={styles.playerName}>
-                {item.name}
-              </Text>
-
-              <Text style={styles.match}>
-                Matches: {item.matches} 
-              </Text>
-
-              <Text style={styles.playerValue}>
-                {getValue(item)}
-              </Text>
-            </View>
-
-            {/* Trophy Icon */}
-            <MaterialCommunityIcons
-              name="trophy"
-              size={28}
-              color="#22C55E"
-            />
-          </View>
-        )}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.background,
+        },
+      ]}
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
+
+      {/* 😎 Animated Background */}
+      <Animated.View style={[styles.glowCircleOne, glowStyle]} />
+
+      <Animated.View style={[styles.glowCircleTwo, glowStyle]} />
+
+      {/* 😎 Header */}
+      <Animated.View entering={FadeInUp.duration(700)}>
+        <Text
+          style={[
+            styles.header,
+            {
+              color: theme.text,
+            },
+          ]}
+        >
+           Dashboard
+        </Text>
+
+        <Text
+          style={[
+            styles.subHeader,
+            {
+              color: theme.subText,
+            },
+          ]}
+        >
+          Player Rankings & Cricket Stats 
+        </Text>
+      </Animated.View>
+
+      {/* 😎 Categories */}
+      <Animated.View entering={FadeInRight.duration(700)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryContainer}
+        >
+          {categories.map((item, index) => {
+            const isActive = activeCategory === item;
+
+            return (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={0.8}
+                style={[
+                  styles.categoryButton,
+                  {
+                    backgroundColor: isActive ? theme.primary : theme.card,
+
+                    borderColor: isActive ? theme.primary : theme.border,
+                  },
+                ]}
+                onPress={() => setActiveCategory(item)}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    {
+                      color: isActive ? '#000' : theme.text,
+                    },
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </Animated.View>
+
+      {/* 😎 Empty State */}
+      {sortedPlayers.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <AlertCircle size={60} color={theme.primary} strokeWidth={2.5} />
+
+          <Text
+            style={[
+              styles.emptyText,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            No Players Found
+          </Text>
+
+          <Text
+            style={[
+              styles.emptySubText,
+              {
+                color: theme.subText,
+              },
+            ]}
+          >
+            Add players to see stats 😎
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={sortedPlayers}
+          keyExtractor={(item, index) =>
+            item?._id || item?.id || index.toString()
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 120,
+          }}
+          renderItem={({ item, index }) => (
+            <Animated.View entering={FadeInDown.duration(500 + index * 120)}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.playerCard,
+                  {
+                    backgroundColor: theme.card,
+
+                    borderColor: theme.border,
+
+                    shadowColor: theme.glow,
+                  },
+                ]}
+                onPress={() =>
+                  navigation.navigate('PlayerDetails', {
+                    player: item,
+                  })
+                }
+              >
+                {/* 😎 Rank */}
+                <View
+                  style={[
+                    styles.rankCircle,
+                    {
+                      backgroundColor: getRankColor(index),
+                    },
+                  ]}
+                >
+                  <Text style={styles.rankText}>{index + 1}</Text>
+                </View>
+
+                {/* 😎 Info */}
+                <View
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.playerName,
+                      {
+                        color: theme.text,
+                      },
+                    ]}
+                  >
+                    {item?.name || 'Unknown'}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.match,
+                      {
+                        color: theme.subText,
+                      },
+                    ]}
+                  >
+                    Matches: {item?.matchesPlayed || 0}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.playerValue,
+                      {
+                        color: theme.primary,
+                      },
+                    ]}
+                  >
+                    {getValue(item)}
+                  </Text>
+                </View>
+
+                {/* 😎 Trophy */}
+                <CategoryIcon
+                  size={30}
+                  color={theme.primary}
+                  strokeWidth={2.5}
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -278,90 +475,188 @@ export default DashboardScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: StatusBar.currentHeight,
     flex: 1,
+
+    paddingTop:
+      Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 50,
+
+    paddingHorizontal: 16,
+  },
+
+  loader: {
+    flex: 1,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+
     backgroundColor: '#07111F',
-    paddingTop: 20,
+  },
+
+  loadingText: {
+    color: '#fff',
+
+    marginTop: 14,
+
+    fontSize: 15,
+  },
+
+  glowCircleOne: {
+    position: 'absolute',
+
+    width: 320,
+
+    height: 320,
+
+    borderRadius: 200,
+
+    backgroundColor: '#22D3EE20',
+
+    top: -100,
+
+    right: -80,
+  },
+
+  glowCircleTwo: {
+    position: 'absolute',
+
+    width: 250,
+
+    height: 250,
+
+    borderRadius: 200,
+
+    backgroundColor: '#06B6D420',
+
+    bottom: 100,
+
+    left: -80,
   },
 
   header: {
-    color: '#fff',
-    fontSize: 30,
+    fontSize: 32,
+
     fontWeight: 'bold',
-    paddingHorizontal: 16,
-    marginBottom: 20,
+  },
+
+  subHeader: {
+    fontSize: 15,
+
+    marginTop: 6,
+
+    marginBottom: 22,
   },
 
   categoryContainer: {
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    paddingBottom: 16,
+
+    paddingRight: 30,
   },
 
   categoryButton: {
-    marginHorizontal: 10,
-    alignItems: 'center',
+    paddingVertical: 10,
+
+    paddingHorizontal: 18,
+
+    borderRadius: 20,
+
+    marginRight: 12,
+
+    borderWidth: 1,
   },
 
   categoryText: {
-    color: '#94A3B8',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    fontSize: 14,
 
-  activeText: {
-    color: '#22C55E',
-  },
-
-  activeLine: {
-    marginTop: 6,
-    width: '100%',
-    height: 3,
-    borderRadius: 10,
-    backgroundColor: '#22C55E',
+    fontWeight: '700',
   },
 
   playerCard: {
-    backgroundColor: '#111C2E',
-    marginHorizontal: 16,
-    marginBottom: 14,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 22,
+
+    padding: 18,
+
+    marginBottom: 16,
+
     flexDirection: 'row',
+
     alignItems: 'center',
+
     borderWidth: 1,
-    borderColor: '#1E293B',
+
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+
+    shadowOpacity: 0.5,
+
+    shadowRadius: 12,
+
+    elevation: 10,
   },
 
   rankCircle: {
-    width: 46,
-    height: 46,
+    width: 50,
+
+    height: 50,
+
     borderRadius: 100,
+
     justifyContent: 'center',
+
     alignItems: 'center',
+
     marginRight: 16,
   },
 
   rankText: {
     color: '#000',
+
     fontWeight: 'bold',
+
     fontSize: 18,
   },
 
   playerName: {
-    color: '#fff',
     fontSize: 18,
+
     fontWeight: 'bold',
   },
 
   match: {
-    color: '#94A3B8',
-    marginTop: 4,
+    marginTop: 5,
+
+    fontSize: 13,
   },
 
   playerValue: {
-    color: '#22C55E',
     marginTop: 8,
+
     fontSize: 15,
-    fontWeight: '600',
+
+    fontWeight: '700',
+  },
+
+  emptyBox: {
+    flex: 1,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    fontSize: 22,
+
+    fontWeight: 'bold',
+
+    marginTop: 14,
+  },
+
+  emptySubText: {
+    fontSize: 14,
+
+    marginTop: 8,
   },
 });

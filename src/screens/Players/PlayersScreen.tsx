@@ -1,332 +1,634 @@
-import React, {useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
+  StatusBar,
   FlatList,
   TouchableOpacity,
-  Modal,
-  ScrollView,
-  StatusBar,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+
+import Animated, {
+  FadeInDown,
+  FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+  Layout,
+} from 'react-native-reanimated';
+
+import {
+  Search,
+  Users,
+  Zap,
+  Radio,
+  TrendingUp,
+  Flame,
+  Trophy,
+  ChevronRightCircle,
+} from 'lucide-react-native';
+
+import { getPlayers } from '../../api/playerApi';
+
+import COLORS from '../../constants/colors';
+
+const sortOptions = ['Latest', 'Oldest', 'A-Z', 'Z-A'];
 
 const PlayersScreen = () => {
-  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const navigation = useNavigation<any>();
 
-  // Dummy Players Data 😎
-  const players = [
-    {
-      id: '1',
-      name: 'Virat Kohli',
-      gender: 'Male',
-      jerseyNumber: 18,
-      role: 'Batsman',
-      team: 'Warriors',
+  const theme = COLORS;
 
-      batting: {
-        runs: 1540,
-        strikeRate: 148.6,
-        fours: 120,
-        sixes: 89,
-        halfCentury: 18,
-        century: 9,
-      },
+  const [players, setPlayers] = useState<any[]>([]);
 
-      bowling: {
-        wickets: 12,
-        economy: 6.5,
-      },
+  const [loading, setLoading] = useState(true);
 
-      fielding: {
-        catches: 24,
-      },
+  const [refreshing, setRefreshing] = useState(false);
 
-      matches: {
-        played: 42,
-        won: 28,
-      },
-    },
+  const [activeSort, setActiveSort] = useState('Latest');
+  const [searchText, setSearchText] = useState('');
 
-    {
-      id: '2',
-      name: 'Rohit Sharma',
-      gender: 'Male',
-      jerseyNumber: 45,
-      role: 'Opener',
-      team: 'Titans',
+  // 😎 Glow Animation
+  const glow = useSharedValue(0.7);
 
-      batting: {
-        runs: 1320,
-        strikeRate: 145.2,
-        fours: 98,
-        sixes: 110,
-        halfCentury: 14,
-        century: 7,
-      },
-
-      bowling: {
-        wickets: 6,
-        economy: 7.4,
-      },
-
-      fielding: {
-        catches: 18,
-      },
-
-      matches: {
-        played: 39,
-        won: 22,
-      },
-    },
-
-    {
-      id: '3',
-      name: 'Bumrah',
-      gender: 'Male',
-      jerseyNumber: 93,
-      role: 'Bowler',
-      team: 'Kings',
-
-      batting: {
-        runs: 320,
-        strikeRate: 102.4,
-        fours: 18,
-        sixes: 7,
-        halfCentury: 0,
-        century: 0,
-      },
-
-      bowling: {
-        wickets: 65,
-        economy: 4.2,
-      },
-
-      fielding: {
-        catches: 11,
-      },
-
-      matches: {
-        played: 41,
-        won: 25,
-      },
-    },
-  ];
-
-  // Player Card
-  const renderPlayer = ({item}: any) => {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.playerCard}
-        onPress={() => setSelectedPlayer(item)}>
-        
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.name.charAt(0)}
-          </Text>
-        </View>
-
-        <View style={{flex: 1}}>
-          <Text style={styles.playerName}>
-            {item.name}
-          </Text>
-
-          <Text style={styles.playerInfo}>
-            #{item.jerseyNumber} • {item.role}
-          </Text>
-
-          <Text style={styles.teamText}>
-            {item.team}
-          </Text>
-        </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={22}
-          color="#94A3B8"
-        />
-      </TouchableOpacity>
+  useEffect(() => {
+    glow.value = withRepeat(
+      withTiming(1, {
+        duration: 2500,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+      true,
     );
+
+    return () => {
+      glow.value = 0;
+    };
+  }, []);
+
+  const glowStyle = useAnimatedStyle(() => {
+    return {
+      opacity: glow.value,
+      transform: [
+        {
+          scale: glow.value,
+        },
+      ],
+    };
+  });
+
+  // 😎 Fetch Players
+  const fetchPlayers = async () => {
+    try {
+      setLoading(true);
+
+      const res = await getPlayers();
+      console.log('PLAYERS API RESPONSE 😎', JSON.stringify(res, null, 2));
+
+      const data = Array.isArray(res?.players)
+        ? res.players
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res)
+        ? res
+        : [];
+
+      setPlayers(data);
+    } catch (error) {
+      console.log('Players Error 😭', error);
+
+      setPlayers([]);
+    } finally {
+      setLoading(false);
+
+      setRefreshing(false);
+    }
   };
 
-  return (
-    <View style={styles.container}>
-      
-      {/* Header */}
-      <Text style={styles.header}>
-        🏏 Players
-      </Text>
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
 
-      {/* Players List */}
-      <FlatList
-        data={players}
-        renderItem={renderPlayer}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    await fetchPlayers();
+  };
+
+  const filteredPlayers = useMemo(() => {
+    return players.filter(player => {
+      const search = searchText.toLowerCase();
+
+      return (
+        player?.name?.toLowerCase()?.includes(search) ||
+        player?.nickName?.toLowerCase()?.includes(search) ||
+        player?.jerseyNumber?.toString()?.includes(search)
+      );
+    });
+  }, [players, searchText]);
+
+  // 😎 Sorting
+  const sortedPlayers = useMemo(() => {
+    return [...filteredPlayers].sort((a, b) => {
+      switch (activeSort) {
+        case 'Latest':
+          return (
+            new Date(b?.createdAt || 0).getTime() -
+            new Date(a?.createdAt || 0).getTime()
+          );
+
+        case 'Oldest':
+          return (
+            new Date(a?.createdAt || 0).getTime() -
+            new Date(b?.createdAt || 0).getTime()
+          );
+
+        case 'A-Z':
+          return (a?.name || '').localeCompare(b?.name || '');
+
+        case 'Z-A':
+          return (b?.name || '').localeCompare(a?.name || '');
+
+        default:
+          return 0;
+      }
+    });
+  }, [filteredPlayers, activeSort]);
+
+  // 😎 Loading
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.loader,
+          {
+            backgroundColor: theme.background,
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
+
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: theme.text,
+            },
+          ]}
+        >
+          Loading Players...
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.background,
+        },
+      ]}
+    >
+      {/* 😎 Status Bar */}
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
 
-      {/* Player Details Modal */}
-      <Modal
-        visible={selectedPlayer !== null}
-        animationType="slide"
-        transparent>
+      {/* 😎 Animated Background */}
+      <Animated.View style={[styles.glowCircleOne, glowStyle]} />
 
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            
-            <ScrollView
-              showsVerticalScrollIndicator={false}>
+      <Animated.View style={[styles.glowCircleTwo, glowStyle]} />
 
-              {/* Close Button */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSelectedPlayer(null)}>
+      {/* 😎 Header */}
+      <Animated.View
+        entering={FadeInDown.duration(700)}
+        style={styles.headerRow}
+      >
+        <View>
+          <Text
+            style={[
+              styles.header,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            Players
+          </Text>
 
-                <Ionicons
-                  name="close"
-                  size={28}
-                  color="#fff"
-                />
-              </TouchableOpacity>
-
-              {/* Profile */}
-              <View style={styles.profileSection}>
-                <View style={styles.bigAvatar}>
-                  <Text style={styles.bigAvatarText}>
-                    {selectedPlayer?.name.charAt(0)}
-                  </Text>
-                </View>
-
-                <Text style={styles.modalPlayerName}>
-                  {selectedPlayer?.name}
-                </Text>
-
-                <Text style={styles.modalSubText}>
-                  #{selectedPlayer?.jerseyNumber} •{' '}
-                  {selectedPlayer?.role}
-                </Text>
-
-                <Text style={styles.modalSubText}>
-                  {selectedPlayer?.gender}
-                </Text>
-              </View>
-
-              {/* Basic Info */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  📌 Basic Info
-                </Text>
-
-                <Text style={styles.infoText}>
-                  Team : {selectedPlayer?.team}
-                </Text>
-
-                <Text style={styles.infoText}>
-                  Matches Played :{' '}
-                  {selectedPlayer?.matches.played}
-                </Text>
-
-                <Text style={styles.infoText}>
-                  Matches Won :{' '}
-                  {selectedPlayer?.matches.won}
-                </Text>
-              </View>
-
-              {/* Batting Stats */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  🏏 Batting Stats
-                </Text>
-
-                <View style={styles.statsGrid}>
-                  <StatCard
-                    title="Runs"
-                    value={selectedPlayer?.batting.runs}
-                  />
-
-                  <StatCard
-                    title="Strike Rate"
-                    value={selectedPlayer?.batting.strikeRate}
-                  />
-
-                  <StatCard
-                    title="4s"
-                    value={selectedPlayer?.batting.fours}
-                  />
-
-                  <StatCard
-                    title="6s"
-                    value={selectedPlayer?.batting.sixes}
-                  />
-
-                  <StatCard
-                    title="50s"
-                    value={selectedPlayer?.batting.halfCentury}
-                  />
-
-                  <StatCard
-                    title="100s"
-                    value={selectedPlayer?.batting.century}
-                  />
-                </View>
-              </View>
-
-              {/* Bowling Stats */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  🎯 Bowling Stats
-                </Text>
-
-                <View style={styles.statsGrid}>
-                  <StatCard
-                    title="Wickets"
-                    value={selectedPlayer?.bowling.wickets}
-                  />
-
-                  <StatCard
-                    title="Economy"
-                    value={selectedPlayer?.bowling.economy}
-                  />
-                </View>
-              </View>
-
-              {/* Fielding Stats */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  🧤 Fielding Stats
-                </Text>
-
-                <View style={styles.statsGrid}>
-                  <StatCard
-                    title="Catches"
-                    value={selectedPlayer?.fielding.catches}
-                  />
-                </View>
-              </View>
-
-              <View style={{height: 40}} />
-            </ScrollView>
-          </View>
+          <Text
+            style={[
+              styles.subHeader,
+              {
+                color: theme.subText,
+              },
+            ]}
+          >
+            Manage all cricket players 
+          </Text>
         </View>
-      </Modal>
-    </View>
-  );
-};
+      </Animated.View>
 
-// Reusable Stat Card 😎
-const StatCard = ({title, value}: any) => {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statValue}>
-        {value}
-      </Text>
+      {/* 😎 Search Input */}
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+        ]}
+      >
+        <Search size={20} color={theme.primary} strokeWidth={2.4} />
 
-      <Text style={styles.statTitle}>
-        {title}
-      </Text>
+        <TextInput
+          placeholder="Search by name, nickname or jersey..."
+          placeholderTextColor={theme.subText}
+          value={searchText}
+          onChangeText={setSearchText}
+          style={[
+            styles.searchInput,
+            {
+              color: theme.text,
+            },
+          ]}
+        />
+      </View>
+
+      {/* 😎 Sort Buttons */}
+      <FlatList
+        horizontal
+        data={sortOptions}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={item => item}
+        style={{
+          maxHeight: 65,
+        }}
+        contentContainerStyle={{
+          paddingRight: 20,
+        }}
+        renderItem={({ item, index }) => {
+          const active = activeSort === item;
+
+          return (
+            <Animated.View
+              entering={FadeInRight.delay(index * 100).springify()}
+            >
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setActiveSort(item)}
+                style={[
+                  styles.sortBtn,
+                  {
+                    backgroundColor: active ? theme.primary : theme.card,
+
+                    borderColor: active ? theme.primary : theme.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.sortText,
+                    {
+                      color: active ? '#000' : theme.text,
+                    },
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        }}
+      />
+
+      {/* 😎 Empty State */}
+      {sortedPlayers.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Users size={90} color={theme.primary} strokeWidth={2.2} />
+
+          <Text
+            style={[
+              styles.emptyText,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            No Players Added Yet 😎
+          </Text>
+
+          <Text
+            style={[
+              styles.emptySubText,
+              {
+                color: theme.subText,
+              },
+            ]}
+          >
+            Add players and track stats easily
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={sortedPlayers}
+          keyExtractor={(item, index) =>
+            item?._id?.toString() || index.toString()
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 120,
+            paddingTop: 8,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.primary}
+            />
+          }
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          renderItem={({ item, index }) => (
+            <Animated.View
+              entering={FadeInDown.delay(index * 120).springify()}
+              layout={Layout.springify()}
+            >
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() =>
+                  navigation.navigate('PlayerDetails', {
+                    player: item,
+                  })
+                }
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    shadowColor: theme.glow,
+                  },
+                ]}
+              >
+                {/* 😎 Top Row */}
+                <View style={styles.topRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.name,
+                        {
+                          color: theme.text,
+                        },
+                      ]}
+                    >
+                      {item?.name || 'Unknown'}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.nickname,
+                        {
+                          color: theme.subText,
+                        },
+                      ]}
+                    >
+                      @{item?.nickName || 'No Nickname'}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.jerseyBox,
+                      {
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.jersey,
+                        {
+                          color: theme.primary,
+                        },
+                      ]}
+                    >
+                      Jersey: {item?.jerseyNumber || 0}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 😎 Divider */}
+                <View
+                  style={[
+                    styles.divider,
+                    {
+                      backgroundColor: theme.border,
+                    },
+                  ]}
+                />
+
+                {/* 😎 Stats */}
+                <View style={styles.statsContainer}>
+                  <View
+                    style={[
+                      styles.statCard,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <Zap size={18} color={theme.primary} strokeWidth={2.5} />
+
+                    <Text
+                      style={[
+                        styles.stat,
+                        {
+                          color: theme.text,
+                        },
+                      ]}
+                    >
+                      Runs: {item?.runs || 0}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statCard,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <Radio size={18} color={theme.primary} strokeWidth={2.5} />
+
+                    <Text
+                      style={[
+                        styles.stat,
+                        {
+                          color: theme.text,
+                        },
+                      ]}
+                    >
+                      Wickets: {item?.wickets || 0}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statCard,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <TrendingUp
+                      size={18}
+                      color={theme.primary}
+                      strokeWidth={2.5}
+                    />
+
+                    <Text
+                      style={[
+                        styles.stat,
+                        {
+                          color: theme.text,
+                        },
+                      ]}
+                    >
+                      4s: {item?.fours || 0}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statCard,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <Flame size={18} color={theme.primary} strokeWidth={2.5} />
+
+                    <Text
+                      style={[
+                        styles.stat,
+                        {
+                          color: theme.text,
+                        },
+                      ]}
+                    >
+                      6s: {item?.sixes || 0}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 😎 Extra Stats */}
+                <View style={styles.extraStatsRow}>
+                  <View
+                    style={[
+                      styles.extraStatBox,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.extraStatLabel,
+                        {
+                          color: theme.subText,
+                        },
+                      ]}
+                    >
+                      Economy
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.extraStatValue,
+                        {
+                          color: theme.primary,
+                        },
+                      ]}
+                    >
+                      {item?.economy || 0}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.extraStatBox,
+                      {
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.extraStatLabel,
+                        {
+                          color: theme.subText,
+                        },
+                      ]}
+                    >
+                      Strike Rate
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.extraStatValue,
+                        {
+                          color: theme.primary,
+                        },
+                      ]}
+                    >
+                      {item?.strikeRate || 0}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 😎 Bottom Row */}
+                <View style={styles.bottomRow}>
+                  <View style={styles.badge}>
+                    <Trophy size={16} color={theme.primary} strokeWidth={2.5} />
+
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        {
+                          color: theme.primary,
+                        },
+                      ]}
+                    >
+                      {item?.matchesPlayed || 0} Matches
+                    </Text>
+                  </View>
+
+                  <ChevronRightCircle
+                    size={28}
+                    color={theme.primary}
+                    strokeWidth={2.4}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -335,160 +637,319 @@ export default PlayersScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: StatusBar.currentHeight,
     flex: 1,
-    backgroundColor: '#07111F',
+
     paddingHorizontal: 16,
-    paddingTop: 20,
+
+    paddingTop: (StatusBar.currentHeight || 0) + 20,
   },
 
-  header: {
-    color: '#fff',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+  loader: {
+    flex: 1,
 
-  playerCard: {
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-
-  avatar: {
-    width: 55,
-    height: 55,
-    borderRadius: 100,
-    backgroundColor: '#22C55E',
     justifyContent: 'center',
+
     alignItems: 'center',
-    marginRight: 14,
   },
 
-  avatarText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
+  loadingText: {
+    marginTop: 14,
 
-  playerName: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+    fontSize: 15,
 
-  playerInfo: {
-    color: '#94A3B8',
-    marginTop: 4,
-  },
-
-  teamText: {
-    color: '#22C55E',
-    marginTop: 4,
     fontWeight: '600',
   },
 
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
+  glowCircleOne: {
+    position: 'absolute',
+
+    width: 320,
+
+    height: 320,
+
+    borderRadius: 200,
+
+    backgroundColor: '#22D3EE20',
+
+    top: -120,
+
+    right: -80,
   },
 
-  modalContent: {
-    height: '92%',
-    backgroundColor: '#07111F',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingHorizontal: 18,
-    paddingTop: 20,
+  glowCircleTwo: {
+    position: 'absolute',
+
+    width: 250,
+
+    height: 250,
+
+    borderRadius: 200,
+
+    backgroundColor: '#06B6D420',
+
+    bottom: 100,
+
+    left: -90,
   },
 
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 10,
-  },
+  header: {
+    fontSize: 32,
 
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 25,
-  },
-
-  bigAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
-    backgroundColor: '#22C55E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-
-  bigAvatarText: {
-    color: '#fff',
-    fontSize: 42,
     fontWeight: 'bold',
   },
 
-  modalPlayerName: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-
-  modalSubText: {
-    color: '#94A3B8',
+  subHeader: {
     marginTop: 6,
-    fontSize: 16,
+
+    marginBottom: 20,
+
+    fontSize: 15,
   },
 
-  section: {
-    marginBottom: 24,
+  sortBtn: {
+    paddingHorizontal: 18,
+
+    paddingVertical: 10,
+
+    borderRadius: 16,
+
+    marginRight: 12,
+
+    marginBottom: 15,
+
+    borderWidth: 1,
+
+    minHeight: 42,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
   },
 
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
+  sortText: {
     fontWeight: 'bold',
-    marginBottom: 16,
+
+    fontSize: 14,
+
+    lineHeight: 18,
+
+    textAlign: 'center',
   },
 
-  infoText: {
-    color: '#CBD5E1',
-    fontSize: 16,
-    marginBottom: 8,
+  card: {
+    borderRadius: 24,
+
+    padding: 18,
+
+    marginBottom: 18,
+
+    borderWidth: 1,
+
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+
+    shadowOpacity: 0.6,
+
+    shadowRadius: 14,
+
+    elevation: 10,
   },
 
-  statsGrid: {
+  topRow: {
     flexDirection: 'row',
+
+    justifyContent: 'space-between',
+
+    alignItems: 'center',
+  },
+
+  name: {
+    fontSize: 24,
+
+    fontWeight: 'bold',
+  },
+
+  nickname: {
+    marginTop: 6,
+
+    fontSize: 15,
+  },
+
+  jerseyBox: {
+    paddingHorizontal: 16,
+
+    paddingVertical: 10,
+
+    borderRadius: 16,
+
+    borderWidth: 1,
+  },
+
+  jersey: {
+    fontSize: 18,
+
+    fontWeight: 'bold',
+  },
+
+  divider: {
+    height: 1,
+
+    marginVertical: 18,
+  },
+
+  statsContainer: {
+    flexDirection: 'row',
+
     flexWrap: 'wrap',
+
     justifyContent: 'space-between',
   },
 
   statCard: {
     width: '48%',
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
-    paddingVertical: 20,
+
+    borderRadius: 16,
+
+    padding: 12,
+
+    marginBottom: 12,
+
+    flexDirection: 'row',
+
     alignItems: 'center',
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#1E293B',
   },
 
-  statValue: {
-    color: '#22C55E',
-    fontSize: 24,
-    fontWeight: 'bold',
+  stat: {
+    marginLeft: 8,
+
+    fontSize: 14,
+
+    fontWeight: '600',
   },
 
-  statTitle: {
-    color: '#CBD5E1',
+  bottomRow: {
     marginTop: 8,
+
+    flexDirection: 'row',
+
+    justifyContent: 'space-between',
+
+    alignItems: 'center',
+  },
+
+  badge: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+  },
+
+  badgeText: {
+    marginLeft: 6,
+
+    fontSize: 14,
+
+    fontWeight: '700',
+  },
+
+  emptyContainer: {
+    flex: 1,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    fontSize: 22,
+
+    fontWeight: 'bold',
+
+    marginTop: 18,
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+
+    justifyContent: 'space-between',
+
+    alignItems: 'center',
+  },
+
+  searchBtn: {
+    width: 52,
+
+    height: 52,
+
+    borderRadius: 16,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+
+    borderWidth: 1,
+  },
+
+  searchContainer: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    borderRadius: 18,
+
+    paddingHorizontal: 16,
+
+    marginBottom: 18,
+
+    borderWidth: 1,
+  },
+
+  searchInput: {
+    flex: 1,
+
+    marginLeft: 10,
+
     fontSize: 15,
+
+    height: 52,
+  },
+
+  extraStatsRow: {
+    flexDirection: 'row',
+
+    justifyContent: 'space-between',
+
+    marginTop: 6,
+
+    marginBottom: 10,
+  },
+
+  extraStatBox: {
+    width: '48%',
+
+    borderRadius: 16,
+
+    paddingVertical: 14,
+
+    alignItems: 'center',
+  },
+
+  extraStatLabel: {
+    fontSize: 13,
+  },
+
+  extraStatValue: {
+    fontSize: 18,
+
+    fontWeight: 'bold',
+
+    marginTop: 4,
+  },
+
+  emptySubText: {
+    marginTop: 8,
+
+    fontSize: 14,
   },
 });

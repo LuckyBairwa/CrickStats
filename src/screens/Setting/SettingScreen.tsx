@@ -1,4 +1,7 @@
-import React, {useState} from 'react';
+// src/screens/Setting/SettingScreen.tsx 😎🔥
+
+import React, { useState, useEffect } from 'react';
+
 import {
   View,
   Text,
@@ -6,179 +9,221 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Modal,
 } from 'react-native';
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import {
+  CloudUpload,
+  BookOpen,
+  Info,
+  UserCircle2,
+  ChevronRight,
+  CloudOff,
+} from 'lucide-react-native';
+
+// import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import Animated, {
+  FadeInDown,
+  FadeInRight,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+
+import { useNavigation } from '@react-navigation/native';
+
+import COLORS from '../../constants/colors';
 
 const SettingsScreen = () => {
-  // Active Theme 😎
-  const [selectedTheme, setSelectedTheme] =
-    useState('Neon Green');
+  const navigation = useNavigation<any>();
 
-  // Active Mode
-  const [selectedMode, setSelectedMode] =
-    useState('Dark');
+  const theme = COLORS;
 
-  // Theme Colors
-  const themes = [
+  const [showBackupModal, setShowBackupModal] = useState(false);
+
+  const glow = useSharedValue(0.6);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withTiming(1, {
+        duration: 2200,
+      }),
+      -1,
+      true,
+    );
+  }, []);
+
+  const glowStyle = useAnimatedStyle(() => {
+    return {
+      opacity: glow.value,
+      transform: [
+        {
+          scale: glow.value,
+        },
+      ],
+    };
+  });
+
+  const settings = [
     {
-      name: 'Neon Green',
-      color: '#22C55E',
+      icon: CloudUpload,
+      title: 'Backup Match Data',
+      action: () => setShowBackupModal(true),
     },
 
     {
-      name: 'Neon Purple',
-      color: '#A855F7',
+      icon: BookOpen,
+      title: 'Gully Cricket Rules',
+      action: () => navigation.navigate('Rules'),
     },
 
     {
-      name: 'Neon Blue',
-      color: '#3B82F6',
+      icon: Info,
+      title: 'About App',
+      action: () => navigation.navigate('AboutApp'),
     },
 
+    // 😎 NEW
     {
-      name: 'Neon Orange',
-      color: '#F97316',
+      icon: UserCircle2,
+      title: 'About Developer',
+      action: () => navigation.navigate('AboutDeveloper'),
     },
-
-    {
-      name: 'Neon Red',
-      color: '#EF4444',
-    },
-  ];
-
-  // App Modes
-  const modes = [
-    'Dark',
-    'Light',
-    'System',
   ];
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}>
-      
-      {/* Header */}
-      <Text style={styles.header}>
-        ⚙️ Settings
-      </Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.background,
+        },
+      ]}
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
 
-      {/* Theme Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          🎨 Theme Colors
-        </Text>
+      <Animated.View style={[styles.glow1, glowStyle]} />
 
-        {themes.map((item, index) => {
-          const isSelected =
-            selectedTheme === item.name;
+      <Animated.View style={[styles.glow2, glowStyle]} />
 
-          return (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.View entering={FadeInDown.duration(700)}>
+          <Text
+            style={[
+              styles.header,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+           Settings
+          </Text>
+
+          <Text
+            style={[
+              styles.subHeader,
+              {
+                color: theme.subText,
+              },
+            ]}
+          >
+            Gully Cricket Control Panel 
+          </Text>
+        </Animated.View>
+
+        {settings.map((item, index) => (
+          <Animated.View key={index} entering={FadeInRight.delay(index * 120)}>
             <TouchableOpacity
-              key={index}
-              activeOpacity={0.8}
-              style={styles.settingCard}
-              onPress={() =>
-                setSelectedTheme(item.name)
-              }>
-              
-              <View
+              activeOpacity={0.85}
+              onPress={item.action}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <item.icon size={24} color={theme.primary} />
+
+              <Text
                 style={[
-                  styles.colorCircle,
+                  styles.cardText,
                   {
-                    backgroundColor: item.color,
+                    color: theme.text,
                   },
                 ]}
-              />
-
-              <Text style={styles.settingText}>
-                {item.name}
+              >
+                {item.title}
               </Text>
 
-              {isSelected && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={26}
-                  color={item.color}
-                />
-              )}
+              <ChevronRight size={20} color={theme.primary} />
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          </Animated.View>
+        ))}
 
-      {/* App Mode Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          🌗 App Mode
-        </Text>
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
-        {modes.map((item, index) => {
-          const isSelected =
-            selectedMode === item;
+      <Modal visible={showBackupModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <Animated.View
+            entering={FadeInUp.duration(500)}
+            style={[
+              styles.modalCard,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <CloudOff size={70} color={theme.primary} />
 
-          return (
+            <Text
+              style={[
+                styles.modalTitle,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              Backup Unavailable 
+            </Text>
+
+            <Text
+              style={[
+                styles.modalDesc,
+                {
+                  color: theme.subText,
+                },
+              ]}
+            >
+              You can't backup your match data right now.
+            </Text>
+
             <TouchableOpacity
-              key={index}
               activeOpacity={0.8}
-              style={styles.settingCard}
-              onPress={() =>
-                setSelectedMode(item)
-              }>
-              
-              <Text style={styles.settingText}>
-                {item} Mode
-              </Text>
-
-              {isSelected && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={26}
-                  color="#22C55E"
-                />
-              )}
+              onPress={() => setShowBackupModal(false)}
+              style={[
+                styles.closeBtn,
+                {
+                  backgroundColor: theme.primary,
+                },
+              ]}
+            >
+              <Text style={styles.closeText}>OK</Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Extra Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          🛠️ More Settings
-        </Text>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.moreCard}>
-          
-          <Text style={styles.moreText}>
-            📂 Backup Match Data
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.moreCard}>
-          
-          <Text style={styles.moreText}>
-            🔄 Reset App Stats
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.moreCard}>
-          
-          <Text style={styles.moreText}>
-            ℹ️ About App
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{height: 40}} />
-    </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -187,67 +232,103 @@ export default SettingsScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: StatusBar.currentHeight,
-    backgroundColor: '#07111F',
     paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingTop: (StatusBar.currentHeight || 0) + 20,
+  },
+
+  glow1: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 200,
+    backgroundColor: '#00F5FF22',
+    top: -80,
+    right: -80,
+  },
+
+  glow2: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 200,
+    backgroundColor: '#00F5FF22',
+    bottom: 60,
+    left: -70,
   },
 
   header: {
-    color: '#fff',
-    fontSize: 30,
+    fontSize: 34,
     fontWeight: 'bold',
-    marginBottom: 24,
   },
 
-  section: {
+  subHeader: {
+    fontSize: 15,
+    marginTop: 6,
     marginBottom: 30,
   },
 
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 18,
-  },
-
-  settingCard: {
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
+  card: {
+    borderRadius: 20,
     padding: 18,
-    marginBottom: 14,
+    marginBottom: 16,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1E293B',
+    shadowColor: '#00F5FF',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
   },
 
-  colorCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 100,
-    marginRight: 16,
-  },
-
-  settingText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
+  cardText: {
     flex: 1,
-  },
-
-  moreCard: {
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-
-  moreText: {
-    color: '#CBD5E1',
+    marginLeft: 14,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '700',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+
+  modalCard: {
+    width: '85%',
+    borderRadius: 26,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 16,
+  },
+
+  modalDesc: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 24,
+  },
+
+  closeBtn: {
+    marginTop: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 45,
+    borderRadius: 18,
+  },
+
+  closeText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

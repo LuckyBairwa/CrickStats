@@ -1,5 +1,9 @@
-import React from 'react';
-// import { StatusBar, StyleSheet, View, Text } from 'react-native';
+// src/screens/Home/HomeScreen.tsx
+
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { useNavigation } from '@react-navigation/native';
+
 import {
   View,
   Text,
@@ -7,382 +11,642 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+// import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import {
+  Trophy,
+  UserPlus,
+  Users,
+  Swords,
+  RefreshCcw,
+} from 'lucide-react-native';
+
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  Easing,
+} from 'react-native-reanimated';
+
+import TopPerformers from '../../components/TopPerformers';
+
+import { getPlayers } from '../../api/playerApi';
+
+import { getTeams } from '../../api/teamApi';
+
+import { getDashboard, getTopPerformers } from '../../api/dashboardApi';
+
+import COLORS from '../../constants/colors';
 
 const HomeScreen = () => {
-  // Greeting Logic 😎
-  const hour = new Date().getHours();
+  const theme = COLORS;
 
-  let greeting = '';
+  const navigation = useNavigation<any>();
 
-  if (hour < 12) {
-    greeting = 'Good Morning';
-  } else if (hour < 17) {
-    greeting = 'Good Afternoon';
-  } else if (hour < 21) {
-    greeting = 'Good Evening';
-  } else {
-    greeting = 'Good Night';
-  }
+  // 😎 States
+  const [loading, setLoading] = useState(true);
 
-  // Dummy Top Players Data
-  const topStats = [
-    {
-      title: 'Most Runs',
-      player: 'Virat',
-      value: '1540',
-      icon: 'cricket',
-    },
-    {
-      title: 'Most Sixes',
-      player: 'Rohit',
-      value: '89',
-      icon: 'baseball',
-    },
-    {
-      title: 'Most 4s',
-      player: 'Gill',
-      value: '120',
-      icon: 'lightning-bolt',
-    },
-    {
-      title: 'Most Wickets',
-      player: 'Bumrah',
-      value: '65',
-      icon: 'target',
-    },
-    {
-      title: 'Best Economy',
-      player: 'Shami',
-      value: '4.2',
-      icon: 'speedometer',
-    },
-    {
-      title: 'Most Dot Balls',
-      player: 'Siraj',
-      value: '320',
-      icon: 'radio-button-off',
-    },
-    {
-      title: 'Most 50s',
-      player: 'Kohli',
-      value: '18',
-      icon: 'trophy',
-    },
-    {
-      title: 'Most 100s',
-      player: 'Sky',
-      value: '9',
-      icon: 'medal',
-    },
-  ];
+  const [dashboard, setDashboard] = useState({
+    totalPlayers: 0,
+    totalRuns: 0,
+    totalWickets: 0,
+    totalMatches: 0,
+  });
 
+  const [topStats, setTopStats] = useState<any[]>([]);
+
+  // 😎 Neon Glow Animation
+  const glow = useSharedValue(0.7);
+
+  useEffect(() => {
+    glow.value = withRepeat(
+      withTiming(1, {
+        duration: 2500,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+      true,
+    );
+
+    return () => {
+      glow.value = 0;
+    };
+  }, []);
+
+  const glowStyle = useAnimatedStyle(() => {
+    return {
+      opacity: glow.value,
+      transform: [
+        {
+          scale: glow.value,
+        },
+      ],
+    };
+  });
+
+  // 😎 Fetch Dashboard Data
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+
+      // 😎 Dashboard Stats API
+      const dashboardRes = await getDashboard();
+
+      console.log('Dashboard Response 😎', dashboardRes);
+
+      const stats = dashboardRes?.stats || {};
+
+      setDashboard({
+        totalPlayers: stats?.totalPlayers || 0,
+
+        totalRuns: stats?.totalRuns || 0,
+
+        totalWickets: stats?.totalWickets || 0,
+
+        totalMatches: stats?.totalMatches || 0,
+      });
+
+      // 😎 Top Performers API
+      const performersRes = await getTopPerformers();
+
+      console.log('Performers Response ', performersRes);
+
+      const performers = performersRes?.performers || [];
+
+      setTopStats(
+        performers.map((item: any) => ({
+          title: item?.title || 'N/A',
+
+          player: item?.player || 'N/A',
+
+          value: item?.value || '0',
+
+          icon: item?.icon || 'trophy-outline',
+        })),
+      );
+    } catch (error) {
+      console.log('Dashboard Fetch Error 😭', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  // 😎 Greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return 'Good Morning';
+    }
+
+    if (hour < 17) {
+      return 'Good Afternoon';
+    }
+
+    if (hour < 21) {
+      return 'Good Evening';
+    }
+
+    return 'Good Night';
+  }, []);
+
+  // 😎 Quick Actions
   const quickActions = [
     {
       title: 'Add Player',
-      icon: 'person-add',
-      color: '#2563EB',
+      icon: UserPlus,
+      screen: 'AddPlayer',
     },
+
     {
       title: 'Create Team',
-      icon: 'people',
-      color: '#16A34A',
+      icon: Users,
+      screen: 'CreateTeam',
     },
+
     {
       title: 'Create Match',
-      icon: 'trophy',
-      color: '#EA580C',
+      icon: Swords,
+      screen: 'CreateMatch',
     },
+
     {
-      title: 'Toss',
-      icon: 'sync',
-      color: '#9333EA',
+      title: 'Refresh',
+      icon: RefreshCcw,
+      action: fetchDashboard,
     },
   ];
 
+  // 😎 Loading
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+
+        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}>
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.greetingText}>
-          {greeting}, Players 👋
-        </Text>
+    <View
+      style={[
+        styles.mainContainer,
+        {
+          backgroundColor: COLORS.background,
+        },
+      ]}
+    >
+      {/* 😎 StatusBar */}
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
 
-        <Text style={styles.subText}>
-          Welcome Back to Gully Cricket 😎
-        </Text>
-      </View>
+      {/* 😎 Animated Glow */}
+      <Animated.View style={[styles.glowCircleOne, glowStyle]} />
 
-      {/* Dashboard Card */}
-      <View style={styles.dashboardCard}>
-        <View style={styles.dashboardTop}>
-          <MaterialCommunityIcons
-            name="cricket"
-            size={28}
-            color="#22C55E"
-          />
+      <Animated.View style={[styles.glowCircleTwo, glowStyle]} />
 
-          <Text style={styles.dashboardTitle}>
-            Cricket Dashboard
-          </Text>
-        </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>25</Text>
-            <Text style={styles.statLabel}>Players</Text>
-          </View>
-
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>6</Text>
-            <Text style={styles.statLabel}>Teams</Text>
-          </View>
-
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>18</Text>
-            <Text style={styles.statLabel}>Matches</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Top Performers */}
-      <Text style={styles.sectionTitle}>
-        🏆 Top Performers
-      </Text>
-
-      <View style={styles.gridContainer}>
-        {topStats.map((item, index) => (
-          <View key={index} style={styles.card}>
-            <MaterialCommunityIcons
-              name={item.icon}
-              size={24}
-              color="#22C55E"
-            />
-
-            <Text style={styles.cardTitle}>
-              {item.title}
-            </Text>
-
-            <Text style={styles.playerName}>
-              {item.player}
-            </Text>
-
-            <Text style={styles.playerValue}>
-              {item.value}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>
-        ⚡ Quick Actions
-      </Text>
-
-      <View style={styles.gridContainer}>
-        {quickActions.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.8}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 120,
+        }}
+      >
+        {/* 😎 Header */}
+        <Animated.View entering={FadeInUp.duration(700)} style={styles.header}>
+          <Text
             style={[
-              styles.actionButton,
-              {backgroundColor: item.color},
-            ]}>
-            <Ionicons
-              name={item.icon}
-              size={28}
-              color="#fff"
-            />
+              styles.greeting,
+              {
+                color: COLORS.text,
+              },
+            ]}
+          >
+            {greeting}
+          </Text>
 
-            <Text style={styles.actionText}>
-              {item.title}
+          <Text
+            style={[
+              styles.subText,
+              {
+                color: COLORS.subText,
+              },
+            ]}
+          >
+            Welcome Back to Gully Cricket
+          </Text>
+        </Animated.View>
+
+        {/* 😎 Dashboard */}
+        <Animated.View
+          entering={FadeInDown.duration(700)}
+          style={[
+            styles.dashboard,
+            {
+              backgroundColor: COLORS.card,
+              borderColor: COLORS.border,
+              shadowColor: COLORS.glow,
+            },
+          ]}
+        >
+          <View style={styles.dashboardTop}>
+            <Trophy size={28} color={COLORS.primary} />
+
+            <Text
+              style={[
+                styles.dashboardTitle,
+                {
+                  color: COLORS.text,
+                },
+              ]}
+            >
+              Cricket Dashboard
             </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+          </View>
 
-      {/* Recent Matches */}
-      <Text style={styles.sectionTitle}>
-        🏏 Recent Matches
-      </Text>
+          <View style={styles.statsGrid}>
+            {[
+              {
+                label: 'Players',
+                value: dashboard.totalPlayers,
+              },
 
-      <View style={styles.matchCard}>
-        <Text style={styles.matchTeams}>
-          Warriors vs Titans
-        </Text>
+              {
+                label: 'Runs',
+                value: dashboard.totalRuns,
+              },
 
-        <Text style={styles.matchResult}>
-          Warriors won by 12 runs
-        </Text>
-      </View>
+              {
+                label: 'Wickets',
+                value: dashboard.totalWickets,
+              },
 
-      <View style={styles.matchCard}>
-        <Text style={styles.matchTeams}>
-          Kings vs Royals
-        </Text>
+              {
+                label: 'Matches',
+                value: dashboard.totalMatches,
+              },
+            ].map((item, index) => (
+              <Animated.View
+                key={index}
+                entering={FadeInDown.duration(500 + index * 120)}
+                style={styles.statBox}
+              >
+                <Text
+                  style={[
+                    styles.statValue,
+                    {
+                      color: COLORS.primary,
+                    },
+                  ]}
+                >
+                  {item.value}
+                </Text>
 
-        <Text style={styles.matchResult}>
-          Royals won by 4 wickets
-        </Text>
-      </View>
+                <Text
+                  style={[
+                    styles.statLabel,
+                    {
+                      color: COLORS.subText,
+                    },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
 
-      <View style={{height: 30}} />
-    </ScrollView>
+        {/* 😎 Quick Actions */}
+        <Animated.Text
+          entering={FadeInRight.duration(700)}
+          style={[
+            styles.sectionTitle,
+            {
+              color: COLORS.text,
+            },
+          ]}
+        >
+          Quick Actions
+        </Animated.Text>
+
+        <View style={styles.grid}>
+          {quickActions.map((item, index) => (
+            <Animated.View
+              key={index}
+              entering={FadeInDown.duration(500 + index * 120)}
+              style={{
+                width: '48%',
+              }}
+            >
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.actionBtn,
+                  {
+                    backgroundColor: COLORS.card,
+                    borderColor: COLORS.border,
+                    shadowColor: COLORS.glow,
+                  },
+                ]}
+                onPress={() => {
+                  try {
+                    if (item.screen) {
+                      navigation.navigate(item.screen);
+                    }
+
+                    if (item.action) {
+                      item.action();
+                    }
+                  } catch (err) {
+                    console.log('Navigation Error 😭', err);
+                  }
+                }}
+              >
+                <item.icon size={30} color={COLORS.primary} />
+
+                <Text
+                  style={[
+                    styles.actionText,
+                    {
+                      color: COLORS.text,
+                    },
+                  ]}
+                >
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
+        </View>
+
+        {/* 😎 Top Performers */}
+        <Animated.Text
+          entering={FadeInRight.duration(700)}
+          style={[
+            styles.sectionTitle,
+            {
+              color: COLORS.text,
+            },
+          ]}
+        >
+           Top Performers
+        </Animated.Text>
+
+        <View style={styles.performersGrid}>
+          {topStats.length === 0 ? (
+            <Text style={{ color: COLORS.subText }}>No stats available</Text>
+          ) : (
+            topStats.map((item, index) => (
+              <Animated.View
+                key={index}
+                entering={FadeInDown.duration(600 + index * 120)}
+                style={styles.performerWrapper}
+              >
+                {/* 😎 Crash Safe Component */}
+                <TopPerformers
+                  item={{
+                    ...item,
+                    index,
+                  }}
+                  theme={COLORS}
+                />
+              </Animated.View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: StatusBar.currentHeight,
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#07111F',
+
     paddingHorizontal: 16,
+
+    paddingTop: (StatusBar.currentHeight || 0) + 20,
+  },
+
+  loader: {
+    flex: 1,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+
+    backgroundColor: '#07111F',
+  },
+
+  loadingText: {
+    color: '#fff',
+
+    marginTop: 14,
+
+    fontSize: 15,
+  },
+
+  glowCircleOne: {
+    position: 'absolute',
+
+    width: 320,
+
+    height: 320,
+
+    borderRadius: 200,
+
+    backgroundColor: '#22D3EE20',
+
+    top: -100,
+
+    right: -80,
+  },
+
+  glowCircleTwo: {
+    position: 'absolute',
+
+    width: 250,
+
+    height: 250,
+
+    borderRadius: 200,
+
+    backgroundColor: '#06B6D420',
+
+    bottom: 100,
+
+    left: -80,
   },
 
   header: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 10,
+
+    marginBottom: 24,
   },
 
-  greetingText: {
-    fontSize: 28,
+  greeting: {
+    fontSize: 32,
+
     fontWeight: 'bold',
-    color: '#fff',
   },
 
   subText: {
+    marginTop: 8,
+
     fontSize: 15,
-    color: '#94A3B8',
-    marginTop: 6,
   },
 
-  dashboardCard: {
-    backgroundColor: '#111C2E',
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 24,
+  dashboard: {
+    borderRadius: 24,
+
+    padding: 20,
+
     borderWidth: 1,
-    borderColor: '#1E293B',
+
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+
+    shadowOpacity: 0.6,
+
+    shadowRadius: 14,
+
+    elevation: 10,
   },
 
   dashboardTop: {
     flexDirection: 'row',
+
     alignItems: 'center',
-    marginBottom: 18,
+
+    marginBottom: 20,
   },
 
   dashboardTitle: {
-    color: '#fff',
-    fontSize: 20,
+    fontSize: 22,
+
     fontWeight: 'bold',
+
     marginLeft: 10,
   },
 
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+
+    flexWrap: 'wrap',
+
     justifyContent: 'space-between',
   },
 
   statBox: {
+    width: '48%',
+
+    backgroundColor: '#0F172A',
+
+    borderRadius: 18,
+
+    paddingVertical: 18,
+
     alignItems: 'center',
+
+    marginBottom: 14,
+
+    borderWidth: 1,
+
+    borderColor: '#164E63',
   },
 
   statValue: {
-    color: '#22C55E',
-    fontSize: 24,
+    fontSize: 28,
+
     fontWeight: 'bold',
   },
 
   statLabel: {
-    color: '#CBD5E1',
-    marginTop: 4,
+    marginTop: 6,
+
+    fontSize: 15,
   },
 
   sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
+    fontSize: 24,
+
     fontWeight: 'bold',
-    marginBottom: 14,
-    marginTop: 10,
+
+    marginTop: 28,
+
+    marginBottom: 16,
   },
 
-  gridContainer: {
+  performersGrid: {
     flexDirection: 'row',
+
     flexWrap: 'wrap',
+
     justifyContent: 'space-between',
   },
 
-  card: {
+  performerWrapper: {
     width: '48%',
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
-    padding: 16,
+
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#1E293B',
   },
 
-  cardTitle: {
-    color: '#94A3B8',
-    fontSize: 14,
-    marginTop: 10,
+  grid: {
+    flexDirection: 'row',
+
+    flexWrap: 'wrap',
+
+    justifyContent: 'space-between',
   },
 
-  playerName: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
+  actionBtn: {
+    borderRadius: 22,
 
-  playerValue: {
-    color: '#22C55E',
-    fontSize: 16,
-    marginTop: 4,
-    fontWeight: '600',
-  },
-
-  actionButton: {
-    width: '48%',
-    borderRadius: 18,
     paddingVertical: 24,
+
     alignItems: 'center',
+
     marginBottom: 14,
+
+    borderWidth: 1,
+
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+
+    shadowOpacity: 0.5,
+
+    shadowRadius: 12,
+
+    elevation: 10,
   },
 
   actionText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
     marginTop: 10,
-  },
 
-  matchCard: {
-    backgroundColor: '#111C2E',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
+    fontSize: 16,
 
-  matchTeams: {
-    color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
-  },
-
-  matchResult: {
-    color: '#22C55E',
-    marginTop: 8,
-    fontSize: 15,
   },
 });
