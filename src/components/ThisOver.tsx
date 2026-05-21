@@ -1,28 +1,38 @@
 import React from 'react';
 
-import {
-  View,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import COLORS from '../constants/colors';
 
-const ThisOver = ({ balls }: any) => {
+// want an icon of arrow from lucide-react-native for view all
+// import {} from 'lucide-react-native';
+
+const ThisOver = ({ balls, onPress }: any) => {
   return (
-    <View style={styles.card}>
-      <Text style={styles.heading}>This Over</Text>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={styles.card}
+      onPress={onPress}
+    >
+      <View style={styles.headerRow}>
+        <Text style={styles.heading}>This Over</Text>
+
+        <Text style={styles.viewText}>View All</Text>
+        {/* want an icon of arrow */}
+      </View>
 
       <View style={styles.row}>
-        {balls?.map((item: any, index: number) => (
-          <View key={index} style={styles.ball}>
-            <Text style={styles.ballText}>
-              {item}
-            </Text>
-          </View>
-        ))}
+        {balls?.length > 0 ? (
+          balls.map((item: any, index: number) => (
+            <View key={index} style={styles.ball}>
+              <Text style={styles.ballText}>{item}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>No balls yet</Text>
+        )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -39,11 +49,28 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
 
+  headerRow: {
+    flexDirection: 'row',
+
+    justifyContent: 'space-between',
+
+    alignItems: 'center',
+
+    marginBottom: 14,
+  },
+
   heading: {
     color: COLORS.primary,
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 14,
+  },
+
+  viewText: {
+    color: COLORS.subText,
+
+    fontSize: 13,
+
+    fontWeight: '600',
   },
 
   row: {
@@ -65,5 +92,9 @@ const styles = StyleSheet.create({
   ballText: {
     color: '#000',
     fontWeight: 'bold',
+  },
+
+  emptyText: {
+    color: COLORS.subText,
   },
 });

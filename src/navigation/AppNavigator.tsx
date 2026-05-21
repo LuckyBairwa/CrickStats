@@ -16,6 +16,7 @@ import InningScreen from '../screens/Matches/InningScreen';
 import PreInningSetupScreen from '../screens/Matches/PreInningSetupScreen';
 import AboutDeveloper from '../screens/Setting/AboutDeveloper';
 import EditPlayerScreen from '../screens/Players/EditPlayerScreen';
+import InningScreen2 from '../screens/Matches/InningScreen2';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,9 +41,11 @@ const AppNavigator = () => {
       <Stack.Screen name="AboutApp" component={AboutAppScreen} />
       <Stack.Screen name="Rules" component={RulesScreen} />
       <Stack.Screen name="InningScreen" component={InningScreen} />
+      <Stack.Screen name="InningScreen2" component={InningScreen2} />
       <Stack.Screen name="PreInningSetup" component={PreInningSetupScreen} />
       <Stack.Screen name="AboutDeveloper" component={AboutDeveloper} />
       <Stack.Screen name="EditPlayer" component={EditPlayerScreen} />
+
 
     </Stack.Navigator>
   );

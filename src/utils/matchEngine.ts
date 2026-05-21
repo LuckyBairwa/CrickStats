@@ -44,6 +44,40 @@ export interface Partnership {
   balls: number;
 }
 
+export interface OverHistoryItem {
+  overNumber: number;
+
+  bowlerName: string;
+
+  balls: string[];
+
+  runsThisOver: number;
+
+  totalRuns: number;
+
+  totalWickets: number;
+
+  striker: {
+    name: string;
+    runs: number;
+    balls: number;
+  };
+
+  nonStriker: {
+    name: string;
+    runs: number;
+    balls: number;
+  };
+
+  runRate: number;
+
+  wicketInfo?: {
+    playerName: string;
+    runs: number;
+    balls: number;
+  };
+}
+
 export interface InningState {
   totalRuns: number;
   wickets: number;
@@ -63,6 +97,8 @@ export interface InningState {
   requiredRunRate: number;
 
   thisOver: string[];
+
+  overHistory: OverHistoryItem[];
 
   usedBatters: string[];
 
@@ -89,14 +125,10 @@ export const formatOvers = (balls: number) => {
 };
 
 export const swapStrike = (inning: InningState) => {
-
-  if (
-    !inning.striker ||
-    !inning.nonStriker
-  ) {
+  if (!inning.striker || !inning.nonStriker) {
     return;
   }
-  
+
   const temp = inning.striker;
 
   inning.striker = inning.nonStriker;
@@ -153,9 +185,65 @@ export const saveHistory = (prev: InningState, updated: InningState) => {
   updated.redoStack = [];
 };
 
-const completeOverIfNeeded = (inning: InningState) => {
+const saveOverHistory = (inning: InningState, wicketData?: any) => {
+  if (!inning.bowler) {
+    return;
+  }
+
+  const overNumber = Math.ceil(inning.legalBalls / 6);
+
+  inning.overHistory.push({
+    overNumber,
+    bowlerName: inning.bowler.name,
+    balls: [...inning.thisOver],
+    runsThisOver: inning.thisOver.reduce((acc, item) => {
+      if (item === 'WD' || item === 'NB') return acc + 1;
+      if (item === 'W') return acc;
+      if (item === 'B' || item === 'LB') return acc + 1;
+      return acc + Number(item || 0);
+    }, 0),
+    totalRuns: inning.totalRuns,
+    totalWickets: inning.wickets,
+    striker: {
+      name: inning.striker?.name || '',
+      runs: inning.striker?.runs || 0,
+      balls: inning.striker?.balls || 0,
+    },
+    nonStriker: {
+      name: inning.nonStriker?.name || '',
+      runs: inning.nonStriker?.runs || 0,
+      balls: inning.nonStriker?.balls || 0,
+    },
+    runRate: inning.currentRunRate,
+    wicketInfo: wicketData
+      ? {
+          playerName:
+            wicketData?.outPlayer === 'nonStriker'
+              ? inning.nonStriker?.name || ''
+              : inning.striker?.name || '',
+          runs: wicketData?.runsCompleted || 0,
+          balls:
+            wicketData?.outPlayer === 'nonStriker'
+              ? inning.nonStriker?.balls || 0
+              : inning.striker?.balls || 0,
+        }
+      : undefined,
+  });
+
+  inning.thisOver = [];
+};
+
+const completeOverIfNeeded = (
+  inning: InningState,
+  shouldSwapStrike: boolean = true,
+  wicketData?: any,
+) => {
   if (inning.legalBalls > 0 && inning.legalBalls % 6 === 0) {
-    swapStrike(inning);
+    saveOverHistory(inning, wicketData);
+
+    if (shouldSwapStrike) {
+      swapStrike(inning);
+    }
   }
 };
 
@@ -197,11 +285,13 @@ export const handleBallEvent = (
 
     if (runs === 0) updated.bowler!.dotBalls += 1;
 
-    if (runs % 2 !== 0) {
+    const singleBatterMode = updated.wickets >= updated.usedBatters.length - 1;
+
+    if (runs % 2 !== 0 && !singleBatterMode) {
       swapStrike(updated);
     }
 
-    completeOverIfNeeded(updated);
+    completeOverIfNeeded(updated, !singleBatterMode);
 
     updated.bowler!.overs = formatOvers(updated.bowler!.balls);
 
@@ -271,7 +361,7 @@ export const handleBallEvent = (
 
     updated.thisOver.push(type);
 
-    completeOverIfNeeded(updated);
+    completeOverIfNeeded(updated, true);
 
     updated.bowler!.overs = formatOvers(updated.bowler!.balls);
 
@@ -312,11 +402,13 @@ export const handleBallEvent = (
     outBatter!.balls += 1;
     outBatter!.status = 'Out';
 
-    if (runsCompleted % 2 !== 0) {
+    const singleBatterMode = updated.wickets >= updated.usedBatters.length - 1;
+
+    if (runsCompleted % 2 !== 0 && !singleBatterMode) {
       swapStrike(updated);
     }
 
-    completeOverIfNeeded(updated);
+    completeOverIfNeeded(updated, !singleBatterMode, wicketData);
 
     updated.bowler!.overs = formatOvers(updated.bowler!.balls);
 
