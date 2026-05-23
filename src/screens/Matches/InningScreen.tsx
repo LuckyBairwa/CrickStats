@@ -62,6 +62,8 @@ const INITIAL_STATE: InningState = {
   currentRunRate: 0,
   projectedScore: 0,
 
+  isSoloBatterMode: false,
+
   target: 0,
   requiredRunRate: 0,
 
@@ -119,6 +121,8 @@ const InningScreen = () => {
 
   const [playerStatsMap, setPlayerStatsMap] = useState<any>({});
 
+  const [bowlerStatsMap, setBowlerStatsMap] = useState<any>({});
+
   // =====================================================
   // 😎 PLAYERS
   // =====================================================
@@ -141,12 +145,10 @@ const InningScreen = () => {
   const TEAM_SIZE = battingPlayers.length;
 
   const outPlayers = useMemo(() => {
-  return Object.values(playerStatsMap)
-    .filter((player: any) => player?.status === 'Out')
-    .map((player: any) => player?._id);
-}, [playerStatsMap]);
-
-  const isLastManStanding = outPlayers.length >= TEAM_SIZE - 2;
+    return Object.values(playerStatsMap)
+      .filter((player: any) => player?.status === 'Out')
+      .map((player: any) => player?._id);
+  }, [playerStatsMap]);
 
   // =====================================================
   // 😎 GLOW EFFECT
@@ -230,6 +232,32 @@ const InningScreen = () => {
       [nonStrikerData._id]: nonStrikerData,
     });
 
+    const initialBowler = {
+      _id: inningSetup?.bowler?._id,
+
+      name: inningSetup?.bowler?.name,
+
+      bowlingStyle: `${inningSetup?.bowler?.bowlerType || ''} ${
+        inningSetup?.bowler?.bowlingStyle || ''
+      }`,
+
+      overs: '0.0',
+
+      balls: 0,
+
+      runsGiven: 0,
+
+      wickets: 0,
+
+      economy: 0,
+
+      dotBalls: 0,
+    };
+
+    setBowlerStatsMap({
+      [initialBowler._id]: initialBowler,
+    });
+
     setInning({
       ...INITIAL_STATE,
 
@@ -241,45 +269,40 @@ const InningScreen = () => {
 
       nonStriker: nonStrikerData,
 
-      bowler: {
-        _id: inningSetup?.bowler?._id,
-        name: inningSetup?.bowler?.name,
-
-        bowlingStyle: `${inningSetup?.bowler?.bowlerType || ''} ${
-          inningSetup?.bowler?.bowlingStyle || ''
-        }`,
-
-        overs: '0.0',
-
-        balls: 0,
-
-        runsGiven: 0,
-        wickets: 0,
-
-        economy: 0,
-        dotBalls: 0,
-      },
+      bowler: initialBowler,
     });
 
     setLoading(false);
   }, [inningSetup]);
 
-
   useEffect(() => {
-  setPlayerStatsMap((prev: any) => {
-    const updated = { ...prev };
+    setPlayerStatsMap((prev: any) => {
+      const updated = { ...prev };
 
-    if (inning.striker?._id) {
-      updated[inning.striker._id] = inning.striker;
-    }
+      if (inning.striker?._id) {
+        updated[inning.striker._id] = inning.striker;
+      }
 
-    if (inning.nonStriker?._id) {
-      updated[inning.nonStriker._id] = inning.nonStriker;
-    }
+      if (inning.nonStriker?._id) {
+        updated[inning.nonStriker._id] = inning.nonStriker;
+      }
 
-    return updated;
-  });
-}, [inning]);
+      return updated;
+    });
+  }, [inning]);
+
+  // 😎 SAVE CURRENT BOWLER STATS
+  useEffect(() => {
+    setBowlerStatsMap((prev: any) => {
+      const updated = { ...prev };
+
+      if (inning.bowler?._id) {
+        updated[inning.bowler._id] = inning.bowler;
+      }
+
+      return updated;
+    });
+  }, [inning.bowler]);
 
   // =====================================================
   // 😎 SCORE HANDLER
@@ -319,27 +342,47 @@ const InningScreen = () => {
     setInning(prev => {
       const prevBalls = prev.legalBalls;
 
-      const updated = handleBallEvent(prev, type, TOTAL_OVERS, wicketData);
+      const updated = handleBallEvent(prev, type, TOTAL_OVERS, {
+        ...wicketData,
+        totalPlayers: TEAM_SIZE,
+      });
 
       // 😎 WICKET FLOW
       if (type === 'WKT') {
-        const outId =
+        const outPlayerId =
           wicketData?.outPlayer === 'nonStriker'
             ? prev.nonStriker?._id
             : prev.striker?._id;
 
-        // if (outId && !outPlayers.includes(outId)) {
-        //   setOutPlayers(old => [...old, outId]);
-        // }
+        if (outPlayerId) {
+          // 😎 MARK PLAYER OUT
+          setPlayerStatsMap((prevMap: any) => ({
+            ...prevMap,
+
+            [outPlayerId]: {
+              ...prevMap[outPlayerId],
+
+              status: 'Out',
+            },
+          }));
+        }
 
         updated.partnership = {
           runs: 0,
           balls: 0,
         };
 
-        const remainingPlayers = TEAM_SIZE - (outPlayers.length + 1);
+      
+        const allOut = updated.wickets >= TEAM_SIZE;
 
-        if (remainingPlayers > 1) {
+        if (allOut) {
+          setTimeout(() => {
+            setInningEnded(true);
+            Alert.alert('All Out! 😎', 'All players are out!');
+          }, 300);
+        } else if (updated.wickets >= TEAM_SIZE - 1) {
+          setShowBatterModal(false);
+        } else {
           setTimeout(() => {
             setShowBatterModal(true);
           }, 300);
@@ -373,30 +416,27 @@ const InningScreen = () => {
   // 😎 UNDO
   // =====================================================
 
-  
-
   const handleUndo = () => {
-  setInning(prev => {
-    const restored = undoBall(prev);
+    setInning(prev => {
+      const restored = undoBall(prev);
 
-    return restored;
-  });
+      return restored;
+    });
 
-  setInningEnded(false);
-};
+    setInningEnded(false);
+  };
 
   // =====================================================
   // 😎 REDO
   // =====================================================
 
-
   const handleRedo = () => {
-  setInning(prev => {
-    const restored = redoBall(prev);
+    setInning(prev => {
+      const restored = redoBall(prev);
 
-    return restored;
-  });
-};
+      return restored;
+    });
+  };
 
   // =====================================================
   // 😎 NEW BATTER
@@ -432,6 +472,8 @@ const InningScreen = () => {
       return {
         ...prev,
 
+        usedBatters: [...new Set([...prev.usedBatters, player._id])],
+
         striker:
           battingPosition === 'striker'
             ? {
@@ -458,10 +500,10 @@ const InningScreen = () => {
   // =====================================================
 
   const selectNewBowler = (player: any) => {
-    setInning(prev => ({
-      ...prev,
+    setInning(prev => {
+      const existingBowler = bowlerStatsMap[player._id];
 
-      bowler: {
+      const bowlerData = existingBowler || {
         _id: player._id,
 
         name: player.name,
@@ -473,12 +515,20 @@ const InningScreen = () => {
         balls: 0,
 
         runsGiven: 0,
+
         wickets: 0,
 
         economy: 0,
+
         dotBalls: 0,
-      },
-    }));
+      };
+
+      return {
+        ...prev,
+
+        bowler: bowlerData,
+      };
+    });
 
     setShowBowlerModal(false);
   };
@@ -510,9 +560,9 @@ const InningScreen = () => {
         <ScoreHeader inning={inning} totalOvers={TOTAL_OVERS} />
 
         {/* 😎 BATTERS */}
-        {!!inning?.striker && !!inning?.nonStriker && (
+        {(inning?.striker || inning?.nonStriker) && (
           <BatterTable
-            striker={inning.striker}
+            striker={inning.striker || inning.nonStriker}
             nonStriker={inning.nonStriker}
           />
         )}
@@ -550,10 +600,12 @@ const InningScreen = () => {
             activeOpacity={0.8}
             style={styles.nextBtn}
             onPress={() => {
-              navigation.navigate('InningScreen2', {
-                firstInningData: inning,
+              navigation.navigate('PreInningSetup', {
                 matchData,
-                inningSetup,
+
+                inningNumber: 2,
+
+                firstInningData: inning,
               });
             }}
           >
@@ -715,17 +767,26 @@ const InningScreen = () => {
             style={styles.modalContainer}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.modalTitle}>Select New Batter 😎</Text>
+            <Text style={styles.modalTitle}>Select New Batter </Text>
 
             {battingPlayers
               .filter((item: any) => {
-                const isOut = outPlayers.includes(item._id);
+                const playerStats = playerStatsMap[item._id];
 
+                // 😎 OUT PLAYERS
+                const isOut = playerStats?.status === 'Out';
+
+                // 😎 CURRENT PLAYERS
                 const alreadyPlaying =
                   item._id === inning?.striker?._id ||
                   item._id === inning?.nonStriker?._id;
 
-                return !isOut && !alreadyPlaying;
+                // 😎 LAST OUT PLAYER
+                const lastOutPlayerId = inning?.lastWicket?.playerId;
+
+                const isLastOutPlayer = item._id === lastOutPlayerId;
+
+                return !isOut && !alreadyPlaying && !isLastOutPlayer;
               })
               .map((item: any) => (
                 <View
@@ -817,231 +878,128 @@ const InningScreen = () => {
       {/* 😎 OVER HISTORY MODAL */}
       {/* ===================================================== */}
 
-      <Modal visible={showOverHistoryModal} transparent animationType="slide">
+       <Modal visible={showOverHistoryModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalContainer,
-              {
-                maxHeight: '88%',
-              },
-            ]}
-          >
-            {/* 😎 HEADER */}
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 20,
-              }}
-            >
-              <Text style={styles.modalTitle}>Over By Over 😎</Text>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Over History 😎🔥</Text>
 
-              <TouchableOpacity onPress={() => setShowOverHistoryModal(false)}>
-                <Text
-                  style={{
-                    color: COLORS.primary,
-                    fontWeight: '700',
-                  }}
-                >
-                  Close
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* 😎 TABS */}
-            <View
-              style={{
-                flexDirection: 'row',
-                marginBottom: 20,
-                gap: 10,
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => setActiveTab('bowling')}
-                style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 14,
-                  backgroundColor:
-                    activeTab === 'bowling' ? COLORS.primary : '#111827',
-                }}
-              >
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontWeight: '700',
-                    color: activeTab === 'bowling' ? '#000' : COLORS.text,
-                  }}
-                >
-                  Bowling
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setActiveTab('batting')}
-                style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 14,
-                  backgroundColor:
-                    activeTab === 'batting' ? COLORS.primary : '#111827',
-                }}
-              >
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontWeight: '700',
-                    color: activeTab === 'batting' ? '#000' : COLORS.text,
-                  }}
-                >
-                  Batting
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* 😎 CONTENT */}
             <ScrollView showsVerticalScrollIndicator={false}>
-              {inning.overHistory
-                ?.slice()
-                .reverse()
-                .map((over: any, index: number) => (
+              {inning?.overHistory?.length > 0 ? (
+                inning.overHistory.map((over: any, index: number) => (
                   <View
                     key={index}
                     style={{
+                      marginBottom: 16,
+                      padding: 14,
+                      borderRadius: 16,
                       backgroundColor: '#111827',
-                      borderRadius: 18,
-                      padding: 16,
-                      marginBottom: 14,
                     }}
                   >
-                    {/* 😎 BOWLING TAB */}
-                    {activeTab === 'bowling' ? (
-                      <>
-                        <Text
-                          style={{
-                            color: COLORS.primary,
-                            fontWeight: '700',
-                            fontSize: 17,
-                          }}
-                        >
-                          Over {over.overNumber}
-                        </Text>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: COLORS.primary,
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                        }}
+                      >
+                        Over {over.overNumber}
+                      </Text>
 
-                        <Text
-                          style={{
-                            color: COLORS.subText,
-                            marginTop: 4,
-                            marginBottom: 14,
-                          }}
-                        >
-                          {over.bowlerName}
-                        </Text>
+                      <Text
+                        style={{
+                          color: COLORS.subText,
+                          fontSize: 13,
+                        }}
+                      >
+                        {over.bowlerName}
+                      </Text>
+                    </View>
 
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {over?.balls?.map((ball: any, i: number) => (
                         <View
+                          key={i}
                           style={{
-                            flexDirection: 'row',
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          {over.balls.map((ball: string, i: number) => (
-                            <View
-                              key={i}
-                              style={{
-                                width: 38,
-                                height: 38,
-                                borderRadius: 19,
-                                backgroundColor: COLORS.primary,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginRight: 8,
-                                marginBottom: 8,
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  fontWeight: '700',
-                                  color: '#000',
-                                }}
-                              >
-                                {ball}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-
-                        <View
-                          style={{
-                            marginTop: 12,
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: COLORS.text,
-                              marginBottom: 4,
-                            }}
-                          >
-                            This Over: {over.runsThisOver}
-                          </Text>
-
-                          <Text
-                            style={{
-                              color: COLORS.text,
-                            }}
-                          >
-                            Total: {over.totalRuns}/{over.totalWickets}
-                          </Text>
-                        </View>
-                      </>
-                    ) : (
-                      <>
-                        {/* 😎 BATTING TAB */}
-
-                        <Text
-                          style={{
-                            color: COLORS.primary,
-                            fontWeight: '700',
-                            fontSize: 17,
-                            marginBottom: 14,
-                          }}
-                        >
-                          Over {over.overNumber}
-                        </Text>
-
-                        <Text
-                          style={{
-                            color: COLORS.text,
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: COLORS.primary,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 8,
                             marginBottom: 8,
                           }}
                         >
-                          {over.striker.name} • {over.striker.runs}(
-                          {over.striker.balls})
-                        </Text>
+                          <Text
+                            style={{
+                              color: '#000',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {ball}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
 
-                        <Text
-                          style={{
-                            color: COLORS.text,
-                          }}
-                        >
-                          {over.nonStriker.name} • {over.nonStriker.runs}(
-                          {over.nonStriker.balls})
-                        </Text>
+                    <View
+                      style={{
+                        marginTop: 8,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ color: COLORS.text }}>
+                        Runs: {over.runsThisOver}
+                      </Text>
 
-                        <Text
-                          style={{
-                            color: COLORS.primary,
-                            marginTop: 12,
-                            fontWeight: '700',
-                          }}
-                        >
-                          RR: {over.runRate}
-                        </Text>
-                      </>
-                    )}
+                      <Text style={{ color: COLORS.text }}>
+                        Score: {over.totalRuns}/{over.totalWickets}
+                      </Text>
+                    </View>
                   </View>
-                ))}
+                ))
+              ) : (
+                <Text style={{ color: COLORS.subText }}>
+                  No over history yet 😎
+                </Text>
+              )}
             </ScrollView>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{
+                marginTop: 20,
+                backgroundColor: COLORS.primary,
+                paddingVertical: 14,
+                borderRadius: 16,
+                alignItems: 'center',
+              }}
+              onPress={() => setShowOverHistoryModal(false)}
+            >
+              <Text
+                style={{
+                  color: '#000',
+                  fontWeight: 'bold',
+                  fontSize: 16,
+                }}
+              >
+                Close
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1061,7 +1019,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 2,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
 
     backgroundColor: COLORS.background,
   },

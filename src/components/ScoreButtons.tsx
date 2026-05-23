@@ -11,10 +11,10 @@ import {
 import COLORS from '../constants/colors';
 
 const buttons = [
-  '0',
   '1',
   '2',
   '3',
+  '0',
   '4',
   '5',
   '6',

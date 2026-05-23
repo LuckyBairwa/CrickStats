@@ -33,7 +33,7 @@ const BottomTabs = () => {
         tabBarStyle: {
           backgroundColor: theme.card,
           borderTopWidth: 1,
-          borderTopColor: theme.border,
+          borderColor: theme.background,
 
           height: 72,
 
@@ -44,9 +44,6 @@ const BottomTabs = () => {
 
           left: 12,
           right: 12,
-          bottom: 12,
-
-          borderRadius: 22,
 
           elevation: 10,
 
@@ -79,14 +76,14 @@ const BottomTabs = () => {
         },
 
         tabBarIcon: ({ color, focused }) => {
-          const iconSize = focused ? 26 : 22;
+          const iconSize = focused ? 25 : 20;
 
           if (route.name === 'Home') {
             return (
               <House
                 size={iconSize}
                 color={color}
-                strokeWidth={focused ? 2.8 : 2.2}
+                strokeWidth={focused ? 3.0 : 1.5}
               />
             );
           }
@@ -96,7 +93,7 @@ const BottomTabs = () => {
               <UsersRound
                 size={iconSize}
                 color={color}
-                strokeWidth={focused ? 2.8 : 2.2}
+                strokeWidth={focused ? 3.0 : 1.5}
               />
             );
           }
@@ -106,7 +103,7 @@ const BottomTabs = () => {
               <BarChart3
                 size={iconSize}
                 color={color}
-                strokeWidth={focused ? 2.8 : 2.2}
+                strokeWidth={focused ? 3.0 : 1.5}
               />
             );
           }
@@ -116,7 +113,7 @@ const BottomTabs = () => {
               <Trophy
                 size={iconSize}
                 color={color}
-                strokeWidth={focused ? 2.8 : 2.2}
+                strokeWidth={focused ? 3.0 : 1.5}
               />
             );
           }
@@ -126,7 +123,7 @@ const BottomTabs = () => {
               <Settings
                 size={iconSize}
                 color={color}
-                strokeWidth={focused ? 2.8 : 2.2}
+                strokeWidth={focused ? 3.0 : 1.5}
               />
             );
           }

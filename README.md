@@ -1,5 +1,6 @@
+1. Inning 2 me issues solve krne hai (UI bhi)
 2. single player in 2 teams and both teams have matches against one another
-4. Match dyanamic data 
+3. 0 run ko Dot la btn show krna 
 6. Kitne matches me players ne batting ya bowling ki us hisaab se played match and bowliing matches count hona  
 7. agar wicket catch out hai to catch krne vale player ke account me +1 catch and bowlers ke account me wkt +1 (✅❌)
 

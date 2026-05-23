@@ -195,7 +195,7 @@ const HomeScreen = () => {
       <View style={styles.loader}>
         <ActivityIndicator size="large" color={COLORS.primary} />
 
-        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+        <Text style={styles.loadingText}>Loading ...</Text>
       </View>
     );
   }
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 20,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
   },
 
   loader: {

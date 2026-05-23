@@ -182,7 +182,7 @@
 //         activeOpacity={0.8}
 //         style={styles.matchCard}
 //         onPress={() => setSelectedMatch(item)}>
-        
+
 //         <View style={styles.topRow}>
 //           <Text style={styles.teams}>
 //             {item.teamA} vs {item.teamB}
@@ -216,7 +216,7 @@
 
 //   return (
 //     <View style={styles.container}>
-      
+
 //       {/* Header */}
 //       <Text style={styles.header}>
 //         🏏 Matches
@@ -238,7 +238,7 @@
 
 //         <View style={styles.modalContainer}>
 //           <View style={styles.modalContent}>
-            
+
 //             <ScrollView
 //               showsVerticalScrollIndicator={false}>
 
@@ -341,7 +341,7 @@
 //                   <View
 //                     key={index}
 //                     style={styles.summaryCard}>
-                    
+
 //                     <Text style={styles.playerName}>
 //                       {item.player}
 //                     </Text>
@@ -380,7 +380,7 @@
 //                   <View
 //                     key={index}
 //                     style={styles.summaryCard}>
-                    
+
 //                     <Text style={styles.playerName}>
 //                       {item.player}
 //                     </Text>
@@ -411,7 +411,7 @@
 //                     <View
 //                       key={index}
 //                       style={styles.overCard}>
-                      
+
 //                       <Text style={styles.overTitle}>
 //                         Over {item.over}
 //                       </Text>
@@ -439,7 +439,7 @@
 //                     <View
 //                       key={index}
 //                       style={styles.wicketCard}>
-                      
+
 //                       <Text style={styles.wicketText}>
 //                         {item}
 //                       </Text>
@@ -727,9 +727,7 @@ const MatchesScreen = () => {
 
       const response = await getMatches();
 
-      const data = Array.isArray(response?.matches)
-        ? response.matches
-        : [];
+      const data = Array.isArray(response?.matches) ? response.matches : [];
 
       setMatches(data);
     } catch (error) {
@@ -782,9 +780,7 @@ const MatchesScreen = () => {
   // 😎 Match Card
   const renderMatch = ({ item, index }: any) => {
     return (
-      <Animated.View
-        entering={FadeInDown.delay(index * 120).springify()}
-      >
+      <Animated.View entering={FadeInDown.delay(index * 120).springify()}>
         <TouchableOpacity
           activeOpacity={0.85}
           style={[
@@ -810,11 +806,7 @@ const MatchesScreen = () => {
               {item?.teamB?.name || item?.teamB || 'Team B'}
             </Text>
 
-            <Ionicons
-              name="trophy"
-              size={24}
-              color={theme.primary}
-            />
+            <Ionicons name="trophy" size={24} color={theme.primary} />
           </View>
 
           <Text
@@ -881,19 +873,9 @@ const MatchesScreen = () => {
       />
 
       {/* 😎 Animated Background */}
-      <Animated.View
-        style={[
-          styles.glowCircleOne,
-          glowStyle,
-        ]}
-      />
+      <Animated.View style={[styles.glowCircleOne, glowStyle]} />
 
-      <Animated.View
-        style={[
-          styles.glowCircleTwo,
-          glowStyle,
-        ]}
-      />
+      <Animated.View style={[styles.glowCircleTwo, glowStyle]} />
 
       {/* 😎 Header */}
       <Animated.View entering={FadeInUp.duration(700)}>
@@ -926,11 +908,7 @@ const MatchesScreen = () => {
           entering={FadeInRight.duration(700)}
           style={styles.emptyContainer}
         >
-          <Ionicons
-            name="calendar-outline"
-            size={90}
-            color={theme.primary}
-          />
+          <Ionicons name="calendar-outline" size={90} color={theme.primary} />
 
           <Text
             style={[
@@ -951,8 +929,8 @@ const MatchesScreen = () => {
               },
             ]}
           >
-            Play your first gully cricket match and
-            it will appear here automatically 😎
+            Play your first gully cricket match and it will appear here
+            automatically 😎
           </Text>
         </Animated.View>
       ) : (
@@ -977,11 +955,7 @@ const MatchesScreen = () => {
       )}
 
       {/* 😎 Match Details Modal */}
-      <Modal
-        visible={selectedMatch !== null}
-        animationType="slide"
-        transparent
-      >
+      <Modal visible={selectedMatch !== null} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View
             style={[
@@ -991,19 +965,13 @@ const MatchesScreen = () => {
               },
             ]}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView showsVerticalScrollIndicator={false}>
               {/* Close Button */}
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setSelectedMatch(null)}
               >
-                <Ionicons
-                  name="close"
-                  size={28}
-                  color={theme.text}
-                />
+                <Ionicons name="close" size={28} color={theme.text} />
               </TouchableOpacity>
 
               {/* Teams */}
@@ -1015,11 +983,8 @@ const MatchesScreen = () => {
                   },
                 ]}
               >
-                {selectedMatch?.teamA?.name ||
-                  selectedMatch?.teamA}{' '}
-                vs{' '}
-                {selectedMatch?.teamB?.name ||
-                  selectedMatch?.teamB}
+                {selectedMatch?.teamA?.name || selectedMatch?.teamA} vs{' '}
+                {selectedMatch?.teamB?.name || selectedMatch?.teamB}
               </Text>
 
               {/* Result */}
@@ -1031,8 +996,7 @@ const MatchesScreen = () => {
                   },
                 ]}
               >
-                {selectedMatch?.result ||
-                  'Result Pending'}
+                {selectedMatch?.result || 'Result Pending'}
               </Text>
 
               {/* Match Info */}
@@ -1064,8 +1028,7 @@ const MatchesScreen = () => {
                     },
                   ]}
                 >
-                  📅 Date :{' '}
-                  {selectedMatch?.date || 'N/A'}
+                  📅 Date : {selectedMatch?.date || 'N/A'}
                 </Text>
 
                 <Text
@@ -1076,8 +1039,7 @@ const MatchesScreen = () => {
                     },
                   ]}
                 >
-                  🏏 Overs :{' '}
-                  {selectedMatch?.overs || 0}
+                  🏏 Overs : {selectedMatch?.overs || 0}
                 </Text>
 
                 <Text
@@ -1088,8 +1050,7 @@ const MatchesScreen = () => {
                     },
                   ]}
                 >
-                  🪙 Toss Winner :{' '}
-                  {selectedMatch?.tossWinner || 'N/A'}
+                  🪙 Toss Winner : {selectedMatch?.tossWinner || 'N/A'}
                 </Text>
 
                 <Text
@@ -1100,8 +1061,7 @@ const MatchesScreen = () => {
                     },
                   ]}
                 >
-                  🎯 Decision :{' '}
-                  {selectedMatch?.tossDecision || 'N/A'}
+                  🎯 Decision : {selectedMatch?.tossDecision || 'N/A'}
                 </Text>
 
                 <Text
@@ -1112,8 +1072,7 @@ const MatchesScreen = () => {
                     },
                   ]}
                 >
-                  🏆 Winner :{' '}
-                  {selectedMatch?.winner || 'N/A'}
+                  🏆 Winner : {selectedMatch?.winner || 'N/A'}
                 </Text>
               </View>
 
@@ -1147,8 +1106,7 @@ const MatchesScreen = () => {
                       },
                     ]}
                   >
-                    {selectedMatch?.teamA?.name ||
-                      selectedMatch?.teamA}
+                    {selectedMatch?.teamA?.name || selectedMatch?.teamA}
                   </Text>
 
                   <Text
@@ -1159,8 +1117,7 @@ const MatchesScreen = () => {
                       },
                     ]}
                   >
-                    {selectedMatch?.teamAScore ||
-                      '0/0'}
+                    {selectedMatch?.teamAScore || '0/0'}
                   </Text>
                 </View>
 
@@ -1173,8 +1130,7 @@ const MatchesScreen = () => {
                       },
                     ]}
                   >
-                    {selectedMatch?.teamB?.name ||
-                      selectedMatch?.teamB}
+                    {selectedMatch?.teamB?.name || selectedMatch?.teamB}
                   </Text>
 
                   <Text
@@ -1185,8 +1141,7 @@ const MatchesScreen = () => {
                       },
                     ]}
                   >
-                    {selectedMatch?.teamBScore ||
-                      '0/0'}
+                    {selectedMatch?.teamBScore || '0/0'}
                   </Text>
                 </View>
               </View>
@@ -1208,10 +1163,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop:
-      Platform.OS === 'android'
-        ? (StatusBar.currentHeight || 0) + 12
-        : 50,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
   },
 
   loaderContainer: {

@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: (StatusBar.currentHeight || 0) + 15,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
   },
 
   glow1: {

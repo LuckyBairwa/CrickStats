@@ -58,7 +58,7 @@ const PreInningSetupScreen = () => {
 
   const route = useRoute<any>();
 
-  const { matchData } = route.params;
+  const { matchData, inningNumber = 1, firstInningData = null } = route.params;
 
   const [loading, setLoading] = useState(true);
 
@@ -74,6 +74,10 @@ const PreInningSetupScreen = () => {
 
   const [setupStep, setSetupStep] = useState<'batters' | 'bowler'>('batters');
 
+  const [battingTeam, setBattingTeam] = useState<any>(null);
+
+  const [bowlingTeam, setBowlingTeam] = useState<any>(null);
+
   // 😎 LOAD DATA
   useEffect(() => {
     loadTeams();
@@ -83,33 +87,58 @@ const PreInningSetupScreen = () => {
     try {
       setLoading(true);
 
+      let battingTeamId = '';
+      let bowlingTeamId = '';
+
       const tossWinnerId = matchData?.tossWinner?._id;
 
       const isTeamAWinner = tossWinnerId === matchData?.teamA?._id;
 
-      let battingTeamId = '';
-      let bowlingTeamId = '';
+      // =================================================
+      // 😎 FIRST INNING
+      // =================================================
 
-      // 😎 Toss winner chooses BAT
-      if (matchData?.tossDecision === 'Bat') {
-        battingTeamId = isTeamAWinner
-          ? matchData?.teamA?._id
-          : matchData?.teamB?._id;
+      if (inningNumber === 1) {
+        if (matchData?.tossDecision === 'Bat') {
+          battingTeamId = isTeamAWinner
+            ? matchData?.teamA?._id
+            : matchData?.teamB?._id;
 
-        bowlingTeamId = isTeamAWinner
-          ? matchData?.teamB?._id
-          : matchData?.teamA?._id;
+          bowlingTeamId = isTeamAWinner
+            ? matchData?.teamB?._id
+            : matchData?.teamA?._id;
+        } else {
+          bowlingTeamId = isTeamAWinner
+            ? matchData?.teamA?._id
+            : matchData?.teamB?._id;
+
+          battingTeamId = isTeamAWinner
+            ? matchData?.teamB?._id
+            : matchData?.teamA?._id;
+        }
       }
 
-      // 😎 Toss winner chooses BOWL
+      // =================================================
+      // 😎 SECOND INNING
+      // =================================================
       else {
-        bowlingTeamId = isTeamAWinner
-          ? matchData?.teamA?._id
-          : matchData?.teamB?._id;
+        if (matchData?.tossDecision === 'Bat') {
+          bowlingTeamId = isTeamAWinner
+            ? matchData?.teamA?._id
+            : matchData?.teamB?._id;
 
-        battingTeamId = isTeamAWinner
-          ? matchData?.teamB?._id
-          : matchData?.teamA?._id;
+          battingTeamId = isTeamAWinner
+            ? matchData?.teamB?._id
+            : matchData?.teamA?._id;
+        } else {
+          battingTeamId = isTeamAWinner
+            ? matchData?.teamA?._id
+            : matchData?.teamB?._id;
+
+          bowlingTeamId = isTeamAWinner
+            ? matchData?.teamB?._id
+            : matchData?.teamA?._id;
+        }
       }
       const battingRes = await getTeamById(battingTeamId);
 
@@ -118,6 +147,10 @@ const PreInningSetupScreen = () => {
       const battingTeam = battingRes?.team;
 
       const bowlingTeam = bowlingRes?.team;
+
+      setBattingTeam(battingTeam);
+
+      setBowlingTeam(bowlingTeam);
 
       // 😎 SAFE ARRAY
       const battingPlayersArray = Array.isArray(battingTeam?.players)
@@ -166,27 +199,34 @@ const PreInningSetupScreen = () => {
 
   // 😎 START MATCH
   const handleStartInning = () => {
-    navigation.navigate('InningScreen', {
-      matchData,
+    const inningSetupData = {
+      battingPlayers,
+      bowlingPlayers,
 
-      inningSetup: {
-        battingPlayers,
-        bowlingPlayers,
+      striker,
+      nonStriker,
+      bowler,
 
-        striker,
-        nonStriker,
-        bowler,
+      battingTeam,
+      bowlingTeam,
+    };
 
-        battingTeam: {
-          name:
-            matchData?.tossDecision === 'Bat'
-              ? matchData?.tossWinner?.name
-              : matchData?.tossWinner?._id === matchData?.teamA?._id
-              ? matchData?.teamB?.name
-              : matchData?.teamA?.name,
-        },
-      },
-    });
+    // 😎 FIRST INNING
+    if (inningNumber === 1) {
+      navigation.navigate('InningScreen', {
+        matchData,
+        inningSetup: inningSetupData,
+      });
+    }
+
+    // 😎 SECOND INNING
+    else {
+      navigation.navigate('InningScreen2', {
+        matchData,
+        inningSetup: inningSetupData,
+        firstInningData,
+      });
+    }
   };
 
   if (loading) {
@@ -198,6 +238,7 @@ const PreInningSetupScreen = () => {
   }
 
   return (
+    
     <View style={styles.container}>
       <Animated.View style={[styles.glow1, glowStyle]} />
 
@@ -207,7 +248,9 @@ const PreInningSetupScreen = () => {
 
       {/* 😎 HEADER */}
       <View style={styles.topCard}>
-        <Text style={styles.title}>Match Setup </Text>
+        <Text style={styles.title}>
+          {inningNumber === 1 ? '1st Innings Setup' : '2nd Innings Setup'}
+        </Text>
 
         <Text style={styles.subTitle}>Select opening players</Text>
       </View>

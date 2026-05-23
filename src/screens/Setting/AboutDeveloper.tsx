@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: (StatusBar.currentHeight || 0) + 10,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
     paddingHorizontal: 18,
   },
 

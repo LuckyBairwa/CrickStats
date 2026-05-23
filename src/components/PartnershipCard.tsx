@@ -20,7 +20,7 @@ export default PartnershipCard;
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 8,
     borderRadius: 20,
     padding: 18,
     backgroundColor: COLORS.card,

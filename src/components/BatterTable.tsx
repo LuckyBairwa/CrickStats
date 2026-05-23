@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
 
-    marginBottom: 16,
+    marginBottom: 8,
 
     borderRadius: 22,
 

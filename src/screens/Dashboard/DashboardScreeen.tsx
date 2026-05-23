@@ -292,7 +292,7 @@ const DashboardScreen = () => {
             },
           ]}
         >
-           Dashboard
+          Dashboard
         </Text>
 
         <Text
@@ -303,7 +303,7 @@ const DashboardScreen = () => {
             },
           ]}
         >
-          Player Rankings & Cricket Stats 
+          Player Rankings & Cricket Stats
         </Text>
       </Animated.View>
 
@@ -477,8 +477,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    paddingTop:
-      Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 50,
+    paddingTop: (StatusBar.currentHeight || 0) + 3,
 
     paddingHorizontal: 16,
   },

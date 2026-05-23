@@ -4,10 +4,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import COLORS from '../constants/colors';
 
-// want an icon of arrow from lucide-react-native for view all
-// import {} from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 
-const ThisOver = ({ balls, onPress }: any) => {
+const ThisOver = ({ balls, overHistory = [], onPress }: any) => {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -17,7 +16,15 @@ const ThisOver = ({ balls, onPress }: any) => {
       <View style={styles.headerRow}>
         <Text style={styles.heading}>This Over</Text>
 
-        <Text style={styles.viewText}>View All</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.viewAllBtn}
+          onPress={onPress}
+        >
+          <Text style={styles.viewText}>View All</Text>
+
+          <ChevronRight size={18} color={COLORS.primary} strokeWidth={2.5} />
+        </TouchableOpacity>
         {/* want an icon of arrow */}
       </View>
 
@@ -92,6 +99,14 @@ const styles = StyleSheet.create({
   ballText: {
     color: '#000',
     fontWeight: 'bold',
+  },
+
+  viewAllBtn: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    gap: 4,
   },
 
   emptyText: {

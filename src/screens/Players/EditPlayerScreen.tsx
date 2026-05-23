@@ -19,7 +19,7 @@ import {
 
 import { useRoute, useNavigation } from '@react-navigation/native';
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { PencilLine, Save, Download  } from 'lucide-react-native';
 
 import Animated, {
   FadeInDown,
@@ -79,31 +79,20 @@ const EditPlayerScreen = () => {
 
     nickName: player?.nickName || '',
 
-    jerseyNumber: String(
-      player?.jerseyNumber || '',
-    ),
+    jerseyNumber: String(player?.jerseyNumber || ''),
 
     gender: player?.gender || 'Male',
 
     role: player?.role || 'Player',
 
-    batsmanType:
-      player?.batsmanType ||
-      'Right-handed',
+    batsmanType: player?.batsmanType || 'Right-handed',
 
-    bowlerType:
-      player?.bowlerType ||
-      'Right-arm',
+    bowlerType: player?.bowlerType || 'Right-arm',
 
-    bowlingStyle:
-      player?.bowlingStyle ||
-      'Medium',
+    bowlingStyle: player?.bowlingStyle || 'Medium',
   });
 
-  const handleChange = (
-    key: string,
-    value: string,
-  ) => {
+  const handleChange = (key: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [key]: value,
@@ -117,81 +106,48 @@ const EditPlayerScreen = () => {
       const payload = {
         ...formData,
 
-        jerseyNumber: Number(
-          formData.jerseyNumber,
-        ),
+        jerseyNumber: Number(formData.jerseyNumber),
       };
 
-      console.log(
-        'UPDATE PAYLOAD 😎',
-        payload,
-      );
+      console.log('UPDATE PAYLOAD 😎', payload);
 
-      await updatePlayer(
-        player._id,
-        payload,
-      );
+      await updatePlayer(player._id, payload);
 
-      Alert.alert(
-        'Success 😎',
-        'Player Updated Successfully',
-      );
+      Alert.alert('Success 😎', 'Player Updated Successfully');
 
       navigation.goBack();
     } catch (error: any) {
-      console.log(
-        'UPDATE ERROR 😭',
-        error?.response?.data ||
-          error?.message,
-      );
+      console.log('UPDATE ERROR 😭', error?.response?.data || error?.message);
 
-      Alert.alert(
-        'Error ❌',
-        'Failed To Update Player',
-      );
+      Alert.alert('Error ❌', 'Failed To Update Player');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderOptions = (
-    title: string,
-    field: string,
-    options: string[],
-  ) => {
+  const renderOptions = (title: string, field: string, options: string[]) => {
     return (
       <Animated.View
         entering={FadeInRight.delay(300)}
         style={styles.optionWrapper}
       >
-        <Text style={styles.label}>
-          {title}
-        </Text>
+        <Text style={styles.label}>{title}</Text>
 
         <View style={styles.optionRow}>
           {options.map(option => {
-            const active =
-              formData[
-                field as keyof typeof formData
-              ] === option;
+            const active = formData[field as keyof typeof formData] === option;
 
             return (
               <TouchableOpacity
                 key={option}
                 activeOpacity={0.8}
-                onPress={() =>
-                  handleChange(field, option)
-                }
+                onPress={() => handleChange(field, option)}
                 style={[
                   styles.optionBtn,
                   {
-                    backgroundColor: active
-                      ? theme.primary
-                      : theme.card,
+                    backgroundColor: active ? theme.primary : theme.card,
 
-                    borderColor: active
-                      ? theme.primary
-                      : theme.border,
+                    borderColor: active ? theme.primary : theme.border,
                   },
                 ]}
               >
@@ -199,9 +155,7 @@ const EditPlayerScreen = () => {
                   style={[
                     styles.optionText,
                     {
-                      color: active
-                        ? '#000'
-                        : theme.text,
+                      color: active ? '#000' : theme.text,
                     },
                   ]}
                 >
@@ -216,9 +170,7 @@ const EditPlayerScreen = () => {
   };
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-    >
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -227,211 +179,123 @@ const EditPlayerScreen = () => {
 
       {loading && (
         <View style={styles.loaderOverlay}>
-          <ActivityIndicator
-            size="large"
-            color={theme.primary}
-          />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       )}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
         >
           {/* Glow */}
-          <Animated.View
-            style={[
-              styles.glowCircle,
-              glowStyle,
-            ]}
-          />
+          <Animated.View style={[styles.glowCircle, glowStyle]} />
 
           {/* Header */}
           <Animated.View
-            entering={FadeInDown.duration(
-              700,
-            )}
+            entering={FadeInDown.duration(700)}
             style={styles.header}
           >
-            <Ionicons
-              name="create-outline"
-              size={30}
-              color={theme.primary}
-            />
+            <PencilLine size={30} color={theme.primary} strokeWidth={2.5} />
 
-            <Text
-              style={styles.headerTitle}
-            >
-              Edit Player
-            </Text>
+            <Text style={styles.headerTitle}>Edit Player</Text>
           </Animated.View>
 
           {/* Name */}
           <Animated.View
-            entering={FadeInDown.delay(
-              100,
-            )}
+            entering={FadeInDown.delay(100)}
             style={styles.inputWrapper}
           >
-            <Text style={styles.label}>
-              Player Name
-            </Text>
+            <Text style={styles.label}>Player Name</Text>
 
             <TextInput
               value={formData.name}
-              onChangeText={text =>
-                handleChange(
-                  'name',
-                  text,
-                )
-              }
+              onChangeText={text => handleChange('name', text)}
               placeholder="Enter Player Name"
-              placeholderTextColor={
-                theme.subText
-              }
+              placeholderTextColor={theme.subText}
               style={styles.input}
             />
           </Animated.View>
 
           {/* Nickname */}
           <Animated.View
-            entering={FadeInDown.delay(
-              200,
-            )}
+            entering={FadeInDown.delay(200)}
             style={styles.inputWrapper}
           >
-            <Text style={styles.label}>
-              Nickname
-            </Text>
+            <Text style={styles.label}>Nickname</Text>
 
             <TextInput
               value={formData.nickName}
-              onChangeText={text =>
-                handleChange(
-                  'nickName',
-                  text,
-                )
-              }
+              onChangeText={text => handleChange('nickName', text)}
               placeholder="Enter Nickname"
-              placeholderTextColor={
-                theme.subText
-              }
+              placeholderTextColor={theme.subText}
               style={styles.input}
             />
           </Animated.View>
 
           {/* Jersey */}
           <Animated.View
-            entering={FadeInDown.delay(
-              300,
-            )}
+            entering={FadeInDown.delay(300)}
             style={styles.inputWrapper}
           >
-            <Text style={styles.label}>
-              Jersey Number
-            </Text>
+            <Text style={styles.label}>Jersey Number</Text>
 
             <TextInput
               keyboardType="number-pad"
               maxLength={3}
-              value={
-                formData.jerseyNumber
-              }
+              value={formData.jerseyNumber}
               onChangeText={text =>
-                handleChange(
-                  'jerseyNumber',
-                  text.replace(
-                    /[^0-9]/g,
-                    '',
-                  ),
-                )
+                handleChange('jerseyNumber', text.replace(/[^0-9]/g, ''))
               }
               placeholder="Enter Jersey No."
-              placeholderTextColor={
-                theme.subText
-              }
+              placeholderTextColor={theme.subText}
               style={styles.input}
             />
           </Animated.View>
 
           {/* Options */}
-          {renderOptions(
-            'Gender',
-            'gender',
-            ['Male', 'Female'],
-          )}
+          {renderOptions('Gender', 'gender', ['Male', 'Female'])}
 
-          {renderOptions(
-            'Role',
-            'role',
-            [
-              'Batsman',
-              'Bowler',
-              'Wicket Keeper',
-              'All Rounder',
-            ],
-          )}
+          {renderOptions('Role', 'role', [
+            'Batsman',
+            'Bowler',
+            'Wicket Keeper',
+            'All Rounder',
+          ])}
 
-          {renderOptions(
-            'Batsman Type',
-            'batsmanType',
-            [
-              'Right-handed',
-              'Left-handed',
-            ],
-          )}
+          {renderOptions('Batsman Type', 'batsmanType', [
+            'Right-handed',
+            'Left-handed',
+          ])}
 
-          {renderOptions(
-            'Bowler Type',
-            'bowlerType',
-            [
-              'Right-arm',
-              'Left-arm',
-            ],
-          )}
+          {renderOptions('Bowler Type', 'bowlerType', [
+            'Right-arm',
+            'Left-arm',
+          ])}
 
-          {renderOptions(
-            'Bowling Style',
-            'bowlingStyle',
-            ['Fast', 'Medium', 'Spin'],
-          )}
+          {renderOptions('Bowling Style', 'bowlingStyle', [
+            'Fast',
+            'Medium',
+            'Spin',
+          ])}
 
           {/* Submit */}
-          <Animated.View
-            entering={FadeInDown.delay(
-              500,
-            )}
-          >
+          <Animated.View entering={FadeInDown.delay(500)}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleUpdate}
               style={styles.submitBtn}
             >
-              <Ionicons
-                name="save-outline"
-                size={24}
-                color="#000"
-              />
+              <Download size={24} color="#000" strokeWidth={2.8} />
 
-              <Text
-                style={styles.submitText}
-              >
-                Update Player
-              </Text>
+              <Text style={styles.submitText}>Update Player</Text>
             </TouchableOpacity>
           </Animated.View>
 
-          <View
-            style={{ height: 60 }}
-          />
+          <View style={{ height: 60 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -444,6 +308,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.background,
+    paddingTop: (StatusBar.currentHeight || 0)+3,
   },
 
   container: {
@@ -582,7 +447,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
 
-    backgroundColor:
-      'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
 });

@@ -94,7 +94,13 @@ export interface InningState {
 
   target: number;
 
+  ballsLeft?: number;
+
+  runsNeeded?: number;
+
   requiredRunRate: number;
+
+  isSoloBatterMode: boolean;
 
   thisOver: string[];
 
@@ -124,9 +130,14 @@ export const formatOvers = (balls: number) => {
   return `${overs}.${remBalls}`;
 };
 
+export const checkSoloBatterMode = (wickets: number, totalPlayers: number) => {
+  return wickets >= totalPlayers - 1;
+};
+
 export const swapStrike = (inning: InningState) => {
-  if (!inning.striker || !inning.nonStriker) {
-    return;
+  // 😎 SOLO BATTER MODE
+  if (inning.isSoloBatterMode || !inning.nonStriker) {
+    return inning;
   }
 
   const temp = inning.striker;
@@ -134,18 +145,21 @@ export const swapStrike = (inning: InningState) => {
   inning.striker = inning.nonStriker;
   inning.nonStriker = temp;
 
-  inning.striker.isStriker = true;
-  inning.nonStriker.isStriker = false;
+  return inning;
 };
 
-export const updateStrikeRate = (player: PlayerStats) => {
+export const updateStrikeRate = (player?: PlayerStats | null) => {
+  if (!player) return;
+
   player.strikeRate =
     player.balls > 0
       ? Number(((player.runs / player.balls) * 100).toFixed(2))
       : 0;
 };
 
-export const updateEconomy = (bowler: BowlerStats) => {
+export const updateEconomy = (bowler?: BowlerStats | null) => {
+  if (!bowler) return;
+
   const overs = bowler.balls / 6;
 
   bowler.economy =
@@ -209,11 +223,17 @@ const saveOverHistory = (inning: InningState, wicketData?: any) => {
       runs: inning.striker?.runs || 0,
       balls: inning.striker?.balls || 0,
     },
-    nonStriker: {
-      name: inning.nonStriker?.name || '',
-      runs: inning.nonStriker?.runs || 0,
-      balls: inning.nonStriker?.balls || 0,
-    },
+    nonStriker: inning.nonStriker
+      ? {
+          name: inning.nonStriker.name || '',
+          runs: inning.nonStriker.runs || 0,
+          balls: inning.nonStriker.balls || 0,
+        }
+      : {
+          name: 'No Partner',
+          runs: 0,
+          balls: 0,
+        },
     runRate: inning.currentRunRate,
     wicketInfo: wicketData
       ? {
@@ -241,7 +261,7 @@ const completeOverIfNeeded = (
   if (inning.legalBalls > 0 && inning.legalBalls % 6 === 0) {
     saveOverHistory(inning, wicketData);
 
-    if (shouldSwapStrike) {
+    if (shouldSwapStrike && !inning.isSoloBatterMode && inning.nonStriker) {
       swapStrike(inning);
     }
   }
@@ -285,7 +305,7 @@ export const handleBallEvent = (
 
     if (runs === 0) updated.bowler!.dotBalls += 1;
 
-    const singleBatterMode = updated.wickets >= updated.usedBatters.length - 1;
+    const singleBatterMode = updated.isSoloBatterMode;
 
     if (runs % 2 !== 0 && !singleBatterMode) {
       swapStrike(updated);
@@ -295,8 +315,13 @@ export const handleBallEvent = (
 
     updated.bowler!.overs = formatOvers(updated.bowler!.balls);
 
-    updateStrikeRate(updated.striker!);
-    updateStrikeRate(updated.nonStriker!);
+    if (updated.striker) {
+      updateStrikeRate(updated.striker);
+    }
+
+    if (updated.nonStriker) {
+      updateStrikeRate(updated.nonStriker);
+    }
 
     updateEconomy(updated.bowler!);
 
@@ -378,47 +403,73 @@ export const handleBallEvent = (
 
   if (type === 'WKT') {
     const outPlayer = wicketData?.outPlayer || 'striker';
-
     const runsCompleted = wicketData?.runsCompleted || 0;
 
     updated.wickets += 1;
 
+    // ✅ STEP 1: Pehle out batter ki stats update karo (null karne se PEHLE)
+    const outBatter =
+      outPlayer === 'striker' ? updated.striker : updated.nonStriker;
+
+    if (outBatter) {
+      outBatter.balls += 1;
+      outBatter.runs += runsCompleted;
+      outBatter.status = 'Out';
+      updateStrikeRate(outBatter);
+    }
+
+    // ✅ STEP 2: Runs, balls, partnership update
     updated.totalRuns += runsCompleted;
-
     updated.legalBalls += 1;
-
     updated.partnership.runs += runsCompleted;
     updated.partnership.balls += 1;
-
     updated.thisOver.push('W');
-
     updated.bowler!.wickets += 1;
     updated.bowler!.balls += 1;
     updated.bowler!.runsGiven += runsCompleted;
 
-    const outBatter =
-      outPlayer === 'striker' ? updated.striker : updated.nonStriker;
+    // ✅ STEP 3: Solo mode check
+    const goingSolo = updated.wickets >= wicketData.totalPlayers - 1;
+    updated.isSoloBatterMode = goingSolo;
 
-    outBatter!.balls += 1;
-    outBatter!.status = 'Out';
+    if (goingSolo) {
+      // ✅ Surviving batter ko striker banana hai
+      if (outPlayer === 'striker') {
+        // Non-striker bachha hai, use striker banao
+        if (updated.nonStriker) {
+          updated.striker = { ...updated.nonStriker, isStriker: true };
+        }
+        // striker already null ho jayega neeche
+      } else {
+        // Striker bachha hai, wahi striker rahega
+        if (updated.striker) {
+          updated.striker = { ...updated.striker, isStriker: true };
+        }
+      }
+      updated.nonStriker = null;
+    } else {
+      // ✅ Normal mode: out player ko null karo
+      if (outPlayer === 'striker') {
+        updated.striker = null;
+      } else {
+        updated.nonStriker = null;
+      }
 
-    const singleBatterMode = updated.wickets >= updated.usedBatters.length - 1;
-
-    if (runsCompleted % 2 !== 0 && !singleBatterMode) {
-      swapStrike(updated);
+      // Odd runs pe strike swap
+      if (runsCompleted % 2 !== 0) {
+        swapStrike(updated);
+      }
     }
 
-    completeOverIfNeeded(updated, !singleBatterMode, wicketData);
+    completeOverIfNeeded(updated, !goingSolo, wicketData);
 
     updated.bowler!.overs = formatOvers(updated.bowler!.balls);
-
     updated.lastWicket = wicketData;
 
-    updateStrikeRate(updated.striker!);
-    updateStrikeRate(updated.nonStriker!);
+    if (updated.striker) updateStrikeRate(updated.striker);
+    if (updated.nonStriker) updateStrikeRate(updated.nonStriker);
 
     updateEconomy(updated.bowler!);
-
     updateMatchStats(updated, totalOvers);
 
     return updated;

@@ -11,12 +11,13 @@ import CreateMatchScreen from '../screens/Matches/CreateMatchScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import PlayerDetailsScreen from '../screens/Players/PlayerDetailsScreen';
 import AboutAppScreen from '../screens/AboutApp/AboutAppScreen';
-import RulesScreen from '../screens/Rules/RulesScreen'
+import RulesScreen from '../screens/Rules/RulesScreen';
 import InningScreen from '../screens/Matches/InningScreen';
 import PreInningSetupScreen from '../screens/Matches/PreInningSetupScreen';
 import AboutDeveloper from '../screens/Setting/AboutDeveloper';
 import EditPlayerScreen from '../screens/Players/EditPlayerScreen';
 import InningScreen2 from '../screens/Matches/InningScreen2';
+import WinnerScreen from '../screens/Winner/WinnerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,8 +46,7 @@ const AppNavigator = () => {
       <Stack.Screen name="PreInningSetup" component={PreInningSetupScreen} />
       <Stack.Screen name="AboutDeveloper" component={AboutDeveloper} />
       <Stack.Screen name="EditPlayer" component={EditPlayerScreen} />
-
-
+      <Stack.Screen name="WinnerScreen" component={WinnerScreen} />
     </Stack.Navigator>
   );
 };
