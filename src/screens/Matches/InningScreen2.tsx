@@ -127,6 +127,8 @@ const InningScreen2 = () => {
 
   const [bowlerStatsMap, setBowlerStatsMap] = useState<any>({});
 
+  const [matchResult, setMatchResult] = useState<any>(null);
+
   // =====================================================
   // 😎 PLAYERS
   // =====================================================
@@ -189,6 +191,19 @@ const InningScreen2 = () => {
       ],
     };
   });
+
+  useEffect(() => {
+    if (!matchResult) return;
+
+    setInningEnded(true);
+    navigation.replace('WinnerScreen', {
+      matchData,
+      firstInningData,
+      secondInningData: matchResult.secondInningData,
+      winnerTeam: matchResult.winnerTeam,
+      resultText: matchResult.resultText,
+    });
+  }, [matchResult]);
 
   // =====================================================
   // 😎 INIT MATCH
@@ -349,7 +364,10 @@ const InningScreen2 = () => {
 
   const processBall = (type: string, wicketData?: any) => {
     setInning((prev: any) => {
-      const updated = handleBallEvent(prev, type, TOTAL_OVERS, wicketData);
+      const updated = handleBallEvent(prev, type, TOTAL_OVERS, {
+        ...wicketData,
+        totalPlayers: TEAM_SIZE,
+      });
 
       // 😎 CHASE CALCULATIONS
 
@@ -371,15 +389,27 @@ const InningScreen2 = () => {
       // 😎 WON
 
       if (updated.totalRuns >= updated.target) {
+        const finalPlayerMap = { ...playerStatsMap };
+        if (updated.striker?._id)
+          finalPlayerMap[updated.striker._id] = updated.striker;
+        if (updated.nonStriker?._id)
+          finalPlayerMap[updated.nonStriker._id] = updated.nonStriker;
+        const finalBowlerMap = { ...bowlerStatsMap };
+        if (updated.bowler?._id)
+          finalBowlerMap[updated.bowler._id] = updated.bowler;
         setTimeout(() => {
           setInningEnded(true);
 
-          navigation.replace('WinnerScreen', {
+          setMatchResult({
             winnerTeam: updated.battingTeam,
-
             resultText: `${updated.battingTeam?.name} won by ${
               TEAM_SIZE - updated.wickets
             } wickets 😎🔥`,
+            secondInningData: {
+              ...updated,
+              playerStatsMap: finalPlayerMap,
+              bowlerStatsMap: finalBowlerMap,
+            },
           });
         }, 500);
       }
@@ -398,36 +428,45 @@ const InningScreen2 = () => {
 
       // 😎 ALL OVERS END
 
+      // ✅ AISE KARO
       if (updated.legalBalls >= TOTAL_OVERS * 6) {
+        const firstTeamRuns = firstInningData?.totalRuns || 0;
+        const secondTeamRuns = updated.totalRuns;
+
+        let winnerTeam;
+        let resultText;
+
+        if (secondTeamRuns > firstTeamRuns) {
+          winnerTeam = updated.battingTeam;
+          resultText = `${updated.battingTeam?.name} won the match 😎🔥`;
+        } else if (secondTeamRuns < firstTeamRuns) {
+          winnerTeam = firstInningData?.battingTeam;
+          resultText = `${firstInningData?.battingTeam?.name} won by ${
+            firstTeamRuns - secondTeamRuns
+          } runs 😎🔥`;
+        } else {
+          winnerTeam = null;
+          resultText = 'Match Draw 😎';
+        }
+
+        const finalPlayerMap = { ...playerStatsMap };
+        if (updated.striker?._id)
+          finalPlayerMap[updated.striker._id] = updated.striker;
+        if (updated.nonStriker?._id)
+          finalPlayerMap[updated.nonStriker._id] = updated.nonStriker;
+        const finalBowlerMap = { ...bowlerStatsMap };
+        if (updated.bowler?._id)
+          finalBowlerMap[updated.bowler._id] = updated.bowler;
+
         setTimeout(() => {
-          setInningEnded(true);
-
-          const firstTeamRuns = firstInningData?.totalRuns || 0;
-
-          const secondTeamRuns = updated.totalRuns;
-
-          let winnerTeam;
-          let resultText;
-
-          if (secondTeamRuns > firstTeamRuns) {
-            winnerTeam = updated.battingTeam;
-
-            resultText = `${updated.battingTeam?.name} won the match 😎🔥`;
-          } else if (secondTeamRuns < firstTeamRuns) {
-            winnerTeam = firstInningData?.battingTeam;
-
-            resultText = `${firstInningData?.battingTeam?.name} won by ${
-              firstTeamRuns - secondTeamRuns
-            } runs 😎🔥`;
-          } else {
-            winnerTeam = null;
-
-            resultText = 'Match Draw 😎';
-          }
-
-          navigation.replace('WinnerScreen', {
+          setMatchResult({
             winnerTeam,
             resultText,
+            secondInningData: {
+              ...updated,
+              playerStatsMap: finalPlayerMap,
+              bowlerStatsMap: finalBowlerMap,
+            },
           });
         }, 500);
       }
@@ -453,24 +492,36 @@ const InningScreen2 = () => {
 
         const allOut = updated.wickets >= TEAM_SIZE;
 
+        // ✅ AISE KARO
         if (allOut) {
-          // ✅ All out — match end (target achieve nahi hua)
+          const firstTeamRuns = firstInningData?.totalRuns || 0;
+          const secondTeamRuns = updated.totalRuns;
+
+          const finalPlayerMap = { ...playerStatsMap };
+          if (updated.striker?._id)
+            finalPlayerMap[updated.striker._id] = updated.striker;
+          if (updated.nonStriker?._id)
+            finalPlayerMap[updated.nonStriker._id] = updated.nonStriker;
+          const finalBowlerMap = { ...bowlerStatsMap };
+          if (updated.bowler?._id)
+            finalBowlerMap[updated.bowler._id] = updated.bowler;
+
           setTimeout(() => {
-            setInningEnded(true);
-            const firstTeamRuns = firstInningData?.totalRuns || 0;
-            const secondTeamRuns = updated.totalRuns;
-            navigation.replace('WinnerScreen', {
+            setMatchResult({
               winnerTeam: firstInningData?.battingTeam,
               resultText: `${firstInningData?.battingTeam?.name} won by ${
                 firstTeamRuns - secondTeamRuns
               } runs 😎🔥`,
+              secondInningData: {
+                ...updated,
+                playerStatsMap: finalPlayerMap,
+                bowlerStatsMap: finalBowlerMap,
+              },
             });
           }, 500);
         } else if (updated.wickets >= TEAM_SIZE - 1) {
-          // ✅ Solo mode — batter modal nahi, surviving batter already set hai
           setShowBatterModal(false);
         } else {
-          // ✅ Normal wicket
           setTimeout(() => {
             setShowBatterModal(true);
           }, 300);
@@ -747,6 +798,9 @@ const InningScreen2 = () => {
                         setInning((prev: any) => {
                           const existingPlayer = playerStatsMap[item._id];
 
+                          const isRestingStriker =
+                            prev.striker?._id === restPlayer?._id;
+
                           const newPlayer = existingPlayer || {
                             _id: item._id,
                             name: item.name,
@@ -756,17 +810,17 @@ const InningScreen2 = () => {
                             fours: 0,
                             sixes: 0,
                             strikeRate: 0,
-                            isStriker: restPlayer?.isStriker,
+                            isStriker: isRestingStriker,
                           };
 
                           return {
                             ...prev,
                             partnership: { runs: 0, balls: 0 },
-                            striker: restPlayer?.isStriker
-                              ? newPlayer
+                            striker: isRestingStriker
+                              ? { ...newPlayer, isStriker: true }
                               : prev.striker,
-                            nonStriker: !restPlayer?.isStriker
-                              ? newPlayer
+                            nonStriker: !isRestingStriker
+                              ? { ...newPlayer, isStriker: false }
                               : prev.nonStriker,
                           };
                         });
@@ -1014,7 +1068,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 2,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
 
     backgroundColor: COLORS.background,
   },

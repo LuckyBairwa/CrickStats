@@ -372,7 +372,6 @@ const InningScreen = () => {
           balls: 0,
         };
 
-      
         const allOut = updated.wickets >= TEAM_SIZE;
 
         if (allOut) {
@@ -605,7 +604,11 @@ const InningScreen = () => {
 
                 inningNumber: 2,
 
-                firstInningData: inning,
+                firstInningData: {
+                  ...inning,
+                  playerStatsMap,
+                  bowlerStatsMap,
+                },
               });
             }}
           >
@@ -705,44 +708,34 @@ const InningScreen = () => {
                         setInning(prev => {
                           const existingPlayer = playerStatsMap[item._id];
 
+                          const isRestingStriker =
+                            prev.striker?._id === restPlayer?._id;
+
                           const newPlayer = existingPlayer || {
                             _id: item._id,
-
                             name: item.name,
-
                             battingStyle: item.batsmanType,
-
                             runs: 0,
                             balls: 0,
-
                             fours: 0,
                             sixes: 0,
-
                             strikeRate: 0,
-
-                            isStriker: restPlayer?.isStriker,
+                            isStriker: isRestingStriker,
                           };
 
                           return {
                             ...prev,
-
-                            partnership: {
-                              runs: 0,
-                              balls: 0,
-                            },
-
-                            striker: restPlayer?.isStriker
-                              ? newPlayer
+                            partnership: { runs: 0, balls: 0 },
+                            striker: isRestingStriker
+                              ? { ...newPlayer, isStriker: true }
                               : prev.striker,
-
-                            nonStriker: !restPlayer?.isStriker
-                              ? newPlayer
+                            nonStriker: !isRestingStriker
+                              ? { ...newPlayer, isStriker: false }
                               : prev.nonStriker,
                           };
                         });
 
                         setRestPlayer(null);
-
                         setShowRestModal(false);
                       }}
                     >
@@ -878,7 +871,7 @@ const InningScreen = () => {
       {/* 😎 OVER HISTORY MODAL */}
       {/* ===================================================== */}
 
-       <Modal visible={showOverHistoryModal} transparent animationType="slide">
+      <Modal visible={showOverHistoryModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Over History 😎🔥</Text>
@@ -1019,7 +1012,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
 
     backgroundColor: COLORS.background,
   },

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
@@ -84,5 +85,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
       paddingHorizontal: 16,
+      paddingTop: (StatusBar.currentHeight || 0) + 10,
   },
 });

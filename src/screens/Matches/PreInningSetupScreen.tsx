@@ -460,7 +460,7 @@ export default PreInningSetupScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
     backgroundColor: COLORS.background,
   },
 

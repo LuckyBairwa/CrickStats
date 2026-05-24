@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
   },
 
   loader: {

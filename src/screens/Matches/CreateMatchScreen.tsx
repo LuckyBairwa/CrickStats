@@ -1,7 +1,8 @@
 // src/screens/Match/CreateMatchScreen.tsx 😎🔥
 
 import React from 'react';
-import { View, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import MatchForm from '../../components/MatchForm';
 import COLORS from '../../constants/colors';
@@ -30,6 +31,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 14,
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
   },
 });

@@ -30,17 +30,22 @@ export const tossMatch = async (matchId: string, tossData: any) => {
   return response.data;
 };
 
-// 🏏 Add Ball
-export const addBall = async (
-  matchId: string,
-  inningsNumber: number,
-  ballData: any,
-) => {
-  const response = await api.post(
-    `/matches/${matchId}/score/${inningsNumber}`,
-    ballData,
-  );
+// ✅ Save Final Match Data
+export const saveMatch = async (id: string, matchData: any) => {
+  const response = await api.put(`/matches/${id}/save`, matchData);
+  return response.data;
+};
 
+// 🏏 Add Ball
+export const addBall = async (matchId: string, ballData: any) => {
+  const response = await api.put(`/matches/${matchId}/add-ball`, ballData);
+
+  return response.data;
+};
+
+// ✅ Update players after match
+export const updatePlayersAfterMatch = async (players: any[]) => {
+  const response = await api.put('/players/update-after-match', { players });
   return response.data;
 };
 

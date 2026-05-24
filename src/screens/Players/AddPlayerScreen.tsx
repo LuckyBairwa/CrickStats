@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 14,
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
   },
 
   loaderOverlay: {

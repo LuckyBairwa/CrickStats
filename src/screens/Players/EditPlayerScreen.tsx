@@ -13,9 +13,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  SafeAreaView,
+  
   StatusBar,
 } from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useRoute, useNavigation } from '@react-navigation/native';
 
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.background,
-    paddingTop: (StatusBar.currentHeight || 0)+3,
+    paddingTop: (StatusBar.currentHeight || 0)+10,
   },
 
   container: {

@@ -14,6 +14,8 @@ import {
 
 import { useNavigation } from '@react-navigation/native';
 
+import { createMatch } from '../api/matchApi';
+
 import { Trophy, Minus, Plus, RefreshCw, Zap } from 'lucide-react-native';
 
 import Animated, {
@@ -64,6 +66,8 @@ const MatchForm = ({ onSubmit }: any) => {
 
   const [loading, setLoading] = useState(true);
 
+  const [creating, setCreating] = useState(false);
+
   const [teamA, setTeamA] = useState<any>(null);
 
   const [teamB, setTeamB] = useState<any>(null);
@@ -99,6 +103,21 @@ const MatchForm = ({ onSubmit }: any) => {
     fetchTeams();
   }, []);
 
+  // 😎 Check Common Players Between Teams
+  const hasCommonPlayers = (team1: any, team2: any) => {
+    if (!team1?.players || !team2?.players) {
+      return false;
+    }
+
+    const team1PlayerIds = team1.players.map((player: any) =>
+      player?._id?.toString(),
+    );
+
+    return team2.players.some((player: any) =>
+      team1PlayerIds.includes(player?._id?.toString()),
+    );
+  };
+
   // 😎 Toss Logic
   const handleToss = () => {
     if (!teamA || !teamB) {
@@ -123,44 +142,71 @@ const MatchForm = ({ onSubmit }: any) => {
   };
 
   // 😎 Create Match
-  const handleCreateMatch = () => {
+  const handleCreateMatch = async () => {
     if (!teamA || !teamB) {
       Alert.alert('Error 😭', 'Please select teams');
-
       return;
     }
 
     if (teamA?._id === teamB?._id) {
       Alert.alert('Error 😭', 'Both teams cannot be same');
-
       return;
     }
 
     if (!tossWinner || !tossDecision) {
       Alert.alert('Error 😭', 'Complete toss process');
-
       return;
     }
 
-    // 😎 Match Data
-    const payload = {
-      teamA,
-      teamB,
+    try {
+      setCreating(true);
 
-      overs,
+      // ✅ Database mein match create karo
+      const response = await createMatch({
+        teamA: teamA._id,
+        teamB: teamB._id,
+        overs,
+        tossWinner: tossWinner?.name || '',
+        tossDecision,
+      });
 
-      tossWinner,
+      const createdMatch = response?.match;
 
-      tossDecision,
-      
-    };
+      if (!createdMatch?._id) {
+        Alert.alert('Error 😭', 'Match create nahi hua');
+        return;
+      }
 
-    console.log('MATCH PAYLOAD 😎', payload);
+      // ✅ matchData mein _id include karo
+      const matchData = {
+        ...createdMatch,
+        teamA, // populated team objects
+        teamB,
+        overs,
+        tossWinner,
+        tossDecision,
+      };
 
-    // 😎 Navigate
-    navigation.navigate('PreInningSetup', {
-      matchData: payload,
-    });
+      console.log('✅ Match Created:', matchData._id);
+
+      navigation.navigate('PreInningSetup', {
+        matchData,
+      });
+    } catch (error: any) {
+      console.log(
+        '❌ Create Match Error:',
+        error?.response?.data || error?.message || error,
+      );
+      console.log('❌ Status:', error?.response?.status);
+      Alert.alert(
+        'Error 😭',
+        (error?.response?.data && error.response.data.message) ||
+          error?.message ||
+          'Match create karne mein problem aayi',
+      );
+    } finally {
+      setCreating(false);
+    }
   };
   // 😎 Loader
   if (loading) {
@@ -242,7 +288,19 @@ const MatchForm = ({ onSubmit }: any) => {
 
         <View style={styles.row}>
           {teams
-            .filter((team: any) => team?._id !== teamA?._id)
+            .filter((team: any) => {
+              // 😎 Same team remove
+              if (team?._id === teamA?._id) {
+                return false;
+              }
+
+              // 😎 Common players wali team remove
+              if (teamA && hasCommonPlayers(teamA, team)) {
+                return false;
+              }
+
+              return true;
+            })
             .map((team: any) => {
               const active = teamB?._id === team?._id;
 
@@ -391,11 +449,18 @@ const MatchForm = ({ onSubmit }: any) => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleCreateMatch}
-          style={styles.createBtn}
+          disabled={creating}
+          style={[styles.createBtn, creating && { opacity: 0.7 }]}
         >
-          <Zap size={24} color="#000" />
+          {creating ? (
+            <ActivityIndicator size="small" color="#000" />
+          ) : (
+            <Zap size={24} color="#000" />
+          )}
 
-          <Text style={styles.createText}>Start Match</Text>
+          <Text style={styles.createText}>
+            {creating ? 'Creating...' : 'Start Match'}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
 

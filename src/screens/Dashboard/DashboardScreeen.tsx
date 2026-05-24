@@ -11,7 +11,6 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
@@ -21,11 +20,12 @@ import {
   Medal,
   Target,
   Shield,
-  CircleDot,
   Award,
-  Star,
-  ChartNoAxesCombined,
   AlertCircle,
+  CircleStar,
+  FileBadge,
+  Zap,
+  Ribbon,
 } from 'lucide-react-native';
 
 import Animated, {
@@ -198,34 +198,34 @@ const DashboardScreen = () => {
   };
 
   // 😎 Dynamic Category Icons
-  const getCategoryIcon = () => {
-    switch (activeCategory) {
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
       case 'Most Runs':
-        return ChartNoAxesCombined;
+        return CircleStar;
 
       case 'Most 6s':
-        return Flame;
+        return Zap;
 
       case 'Most 4s':
         return Target;
 
       case 'Most Wickets':
-        return Trophy;
+        return Flame;
 
       case 'Best Economy':
         return Shield;
 
       case 'Most Catches':
-        return Award;
+        return FileBadge;
 
       case 'Most Dot Balls':
-        return CircleDot;
+        return Ribbon;
 
-      case 'Most 100s':
+      case 'Most 40s':
         return Medal;
 
-      case 'Most 50s':
-        return Star;
+      case 'Most 30s':
+        return Award;
 
       default:
         return Trophy;
@@ -259,8 +259,6 @@ const DashboardScreen = () => {
       </View>
     );
   }
-
-  const CategoryIcon = getCategoryIcon();
 
   return (
     <View
@@ -317,10 +315,12 @@ const DashboardScreen = () => {
           {categories.map((item, index) => {
             const isActive = activeCategory === item;
 
+            const IconComponent = getCategoryIcon(item);
+
             return (
               <TouchableOpacity
                 key={index}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
                 style={[
                   styles.categoryButton,
                   {
@@ -331,6 +331,25 @@ const DashboardScreen = () => {
                 ]}
                 onPress={() => setActiveCategory(item)}
               >
+                {/* 😎 ICON CONTAINER */}
+                <View
+                  style={[
+                    styles.categoryIconBox,
+                    {
+                      backgroundColor: isActive ? '#00000022' : '#22D3EE22',
+
+                      borderColor: isActive ? '#00000022' : '#22D3EE55',
+                    },
+                  ]}
+                >
+                  <IconComponent
+                    size={15}
+                    color={isActive ? '#000' : theme.primary}
+                    strokeWidth={2.8}
+                  />
+                </View>
+
+                {/* 😎 LABEL */}
                 <Text
                   style={[
                     styles.categoryText,
@@ -457,11 +476,11 @@ const DashboardScreen = () => {
                 </View>
 
                 {/* 😎 Trophy */}
-                <CategoryIcon
+                {/* <CategoryIcon
                   size={30}
                   color={theme.primary}
                   strokeWidth={2.5}
-                />
+                /> */}
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -477,7 +496,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
 
     paddingHorizontal: 16,
   },
@@ -553,13 +572,33 @@ const styles = StyleSheet.create({
   },
 
   categoryButton: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
     paddingVertical: 10,
 
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
 
     borderRadius: 20,
 
     marginRight: 12,
+
+    borderWidth: 1,
+  },
+
+  categoryIconBox: {
+    width: 28,
+
+    height: 28,
+
+    borderRadius: 100,
+
+    justifyContent: 'center',
+
+    alignItems: 'center',
+
+    marginRight: 8,
 
     borderWidth: 1,
   },

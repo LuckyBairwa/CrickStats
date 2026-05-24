@@ -5,12 +5,12 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import {
-  ChartNoAxesCombined,
-  OctagonPause,
+  CircleStar ,
+  Flame ,
   Medal,
   Award,
-  ArrowUpWideNarrow,
-  Bolt,
+  Crown,
+  Ribbon ,
 } from 'lucide-react-native';
 
 const TopPerformers = ({ item, theme }: any) => {
@@ -20,12 +20,12 @@ const TopPerformers = ({ item, theme }: any) => {
 
   // 😎 ICONS ORDER
   const icons = [
-    ChartNoAxesCombined,
-    OctagonPause,
+    CircleStar ,
+    Flame ,
     Medal,
     Award,
-    ArrowUpWideNarrow,
-    Bolt,
+    Crown,
+    Ribbon ,
   ];
 
   // 😎 CARD INDEX

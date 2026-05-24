@@ -15,14 +15,12 @@ import {
   Platform,
 } from 'react-native';
 
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-
 import {
-  Trophy,
   UserPlus,
   Users,
   Swords,
   RefreshCcw,
+  ChartBar,
 } from 'lucide-react-native';
 
 import Animated, {
@@ -265,7 +263,7 @@ const HomeScreen = () => {
           ]}
         >
           <View style={styles.dashboardTop}>
-            <Trophy size={28} color={COLORS.primary} />
+            <ChartBar size={28} color={COLORS.primary} />
 
             <Text
               style={[
@@ -405,7 +403,7 @@ const HomeScreen = () => {
             },
           ]}
         >
-           Top Performers
+          Top Performers
         </Animated.Text>
 
         <View style={styles.performersGrid}>
@@ -443,7 +441,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    paddingTop: (StatusBar.currentHeight || 0) + 3,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
   },
 
   loader: {

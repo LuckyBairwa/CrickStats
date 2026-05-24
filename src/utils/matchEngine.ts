@@ -75,6 +75,9 @@ export interface OverHistoryItem {
     playerName: string;
     runs: number;
     balls: number;
+    wicketType?: string;
+    fielder?: string;
+    outPlayerId?: string;
   };
 }
 
@@ -246,6 +249,9 @@ const saveOverHistory = (inning: InningState, wicketData?: any) => {
             wicketData?.outPlayer === 'nonStriker'
               ? inning.nonStriker?.balls || 0
               : inning.striker?.balls || 0,
+          wicketType: wicketData?.wicketType || '', // ✅ ADD
+          fielder: wicketData?.fielder?.name || '', // ✅ ADD
+          outPlayerId: wicketData?.outPlayerId || '', // ✅ ADD
         }
       : undefined,
   });
