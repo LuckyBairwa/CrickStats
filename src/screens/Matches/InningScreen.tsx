@@ -48,9 +48,7 @@ import {
   PlayerStats,
 } from '../../utils/matchEngine';
 
-// =====================================================
 // 😎 TYPES
-// =====================================================
 
 const INITIAL_STATE: InningState = {
   totalRuns: 0,
@@ -114,6 +112,15 @@ const InningScreen = () => {
   const [showBatterModal, setShowBatterModal] = useState(false);
 
   const [showWicketModal, setShowWicketModal] = useState(false);
+
+  const [autoPosition, setAutoPosition] = useState<
+    'striker' | 'nonStriker' | null
+  >(null);
+  const [showSurvivorModal, setShowSurvivorModal] = useState(false);
+  const [survivorData, setSurvivorData] = useState<{
+    survivingPlayer: any;
+    newBatterPosition: 'striker' | 'nonStriker';
+  } | null>(null);
 
   const [showOverHistoryModal, setShowOverHistoryModal] = useState(false);
 
@@ -349,6 +356,10 @@ const InningScreen = () => {
 
       // 😎 WICKET FLOW
       if (type === 'WKT') {
+        const isRunOut = wicketData?.wicketType === 'Run Out';
+        const runsCompleted = wicketData?.runsCompleted || 0;
+        const outPlayer = wicketData?.outPlayer || 'striker';
+
         const outPlayerId =
           wicketData?.outPlayer === 'nonStriker'
             ? prev.nonStriker?._id
@@ -377,14 +388,53 @@ const InningScreen = () => {
         if (allOut) {
           setTimeout(() => {
             setInningEnded(true);
-            Alert.alert('All Out! 😎', 'All players are out!');
+            Alert.alert('All Out! ', 'All players are out!');
           }, 300);
         } else if (updated.wickets >= TEAM_SIZE - 1) {
           setShowBatterModal(false);
-        } else {
-          setTimeout(() => {
-            setShowBatterModal(true);
-          }, 300);
+          setAutoPosition(null);
+        } 
+        else if (isRunOut) {
+          const isOdd = runsCompleted % 2 === 1;
+          if (runsCompleted === 0) {
+            if (outPlayer === 'striker') {
+              updated.striker = { ...prev.nonStriker!, isStriker: true };
+              updated.nonStriker = null;
+              setAutoPosition('nonStriker');
+            } else {
+              updated.nonStriker = null;
+              setAutoPosition('striker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          } else if (isOdd) {
+            if (outPlayer === 'striker') {
+              updated.striker = null; // new batter
+              updated.nonStriker = { ...prev.nonStriker!, isStriker: false };
+              setAutoPosition('striker');
+            } else {
+              updated.striker = { ...prev.striker!, isStriker: true };
+              updated.nonStriker = null; // new batter
+              setAutoPosition('nonStriker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          } else {
+            if (outPlayer === 'striker') {
+              updated.striker = { ...prev.nonStriker!, isStriker: true };
+              updated.nonStriker = null;
+              setAutoPosition('nonStriker');
+            } else {
+              updated.nonStriker = null;
+              setAutoPosition('striker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          }
+        } 
+        else {
+          setAutoPosition(null);
+          setTimeout(() => setShowBatterModal(true), 300);
         }
       }
 
@@ -425,9 +475,7 @@ const InningScreen = () => {
     setInningEnded(false);
   };
 
-  // =====================================================
   // 😎 REDO
-  // =====================================================
 
   const handleRedo = () => {
     setInning(prev => {
@@ -437,9 +485,7 @@ const InningScreen = () => {
     });
   };
 
-  // =====================================================
   // 😎 NEW BATTER
-  // =====================================================
 
   const selectNewBatter = (
     player: any,
@@ -452,19 +498,13 @@ const InningScreen = () => {
       // 😎 IF PLAYER ALREADY PLAYED BEFORE
       const newBatter: PlayerStats = existingPlayer || {
         _id: player._id,
-
         name: player.name,
-
         battingStyle: player.batsmanType,
-
         runs: 0,
         balls: 0,
-
         fours: 0,
         sixes: 0,
-
         strikeRate: 0,
-
         isStriker: battingPosition === 'striker',
       };
 
@@ -491,12 +531,11 @@ const InningScreen = () => {
       };
     });
 
+    setAutoPosition(null);
     setShowBatterModal(false);
   };
 
-  // =====================================================
   // 😎 NEW BOWLER
-  // =====================================================
 
   const selectNewBowler = (player: any) => {
     setInning(prev => {
@@ -532,9 +571,7 @@ const InningScreen = () => {
     setShowBowlerModal(false);
   };
 
-  // =====================================================
   // 😎 LOADING
-  // =====================================================
 
   if (loading) {
     return (
@@ -544,9 +581,7 @@ const InningScreen = () => {
     );
   }
 
-  // =====================================================
   // 😎 UI
-  // =====================================================
 
   return (
     <>
@@ -769,15 +804,16 @@ const InningScreen = () => {
                 // 😎 OUT PLAYERS
                 const isOut = playerStats?.status === 'Out';
 
-                // 😎 CURRENT PLAYERS
-                const alreadyPlaying =
-                  item._id === inning?.striker?._id ||
-                  item._id === inning?.nonStriker?._id;
-
                 // 😎 LAST OUT PLAYER
                 const lastOutPlayerId = inning?.lastWicket?.playerId;
 
                 const isLastOutPlayer = item._id === lastOutPlayerId;
+
+                // 😎 CURRENT PLAYERS
+                const alreadyPlaying =
+                  (inning?.striker?._id && item._id === inning.striker._id) ||
+                  (inning?.nonStriker?._id &&
+                    item._id === inning.nonStriker._id);
 
                 return !isOut && !alreadyPlaying && !isLastOutPlayer;
               })
@@ -797,40 +833,49 @@ const InningScreen = () => {
                     <Text style={styles.playerInfo}>{item.batsmanType}</Text>
                   </TouchableOpacity>
 
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      gap: 10,
-                      marginTop: 8,
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        styles.positionBtn,
-                        {
-                          backgroundColor: '#06B6D4',
-                        },
-                      ]}
-                      onPress={() => selectNewBatter(item, 'striker')}
-                    >
-                      <Text style={styles.positionBtnText}>
-                        Play as Striker
-                      </Text>
-                    </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                    {autoPosition ? (
+                      <TouchableOpacity
+                        style={[
+                          styles.positionBtn,
+                          { backgroundColor: '#06B6D4', flex: 1 },
+                        ]}
+                        onPress={() => selectNewBatter(item, autoPosition)}
+                      >
+                        <Text style={styles.positionBtnText}>
+                          Play as{' '}
+                          {autoPosition === 'striker'
+                            ? 'Striker'
+                            : 'Non-Striker'}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={[
+                            styles.positionBtn,
+                            { backgroundColor: '#06B6D4' },
+                          ]}
+                          onPress={() => selectNewBatter(item, 'striker')}
+                        >
+                          <Text style={styles.positionBtnText}>
+                            Play as Striker
+                          </Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[
-                        styles.positionBtn,
-                        {
-                          backgroundColor: '#8B5CF6',
-                        },
-                      ]}
-                      onPress={() => selectNewBatter(item, 'nonStriker')}
-                    >
-                      <Text style={styles.positionBtnText}>
-                        Play as Non-Striker
-                      </Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.positionBtn,
+                            { backgroundColor: '#8B5CF6' },
+                          ]}
+                          onPress={() => selectNewBatter(item, 'nonStriker')}
+                        >
+                          <Text style={styles.positionBtnText}>
+                            Play as Non-Striker
+                          </Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                   </View>
                 </View>
               ))}
@@ -1002,9 +1047,7 @@ const InningScreen = () => {
 
 export default InningScreen;
 
-// =====================================================
 // 😎 STYLES
-// =====================================================
 
 const styles = StyleSheet.create({
   container: {

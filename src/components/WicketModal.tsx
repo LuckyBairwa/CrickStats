@@ -59,6 +59,49 @@ const WicketModal = ({
     }
   }, [visible]);
 
+  const getPositionHint = (): string => {
+    if (wicketType !== 'Run Out') return '';
+
+    const isOddRuns = runsCompleted % 2 === 1;
+
+    if (runsCompleted === 0) {
+      // 😎 CASE 1: 0 runs
+      // P1 out (striker) → P3 nonStriker, P2 striker
+      // P2 out (nonStriker) → P3 striker, P1 striker rehta
+      if (outPlayer === 'striker') {
+        return `${
+          inning?.nonStriker?.name || 'Non-Striker'
+        } will become Striker\nNew batter → Non-Striker`;
+      } else {
+        return `${
+          inning?.striker?.name || 'Striker'
+        } will remain Striker\nNew batter → Striker`;
+      }
+    } else if (isOddRuns) {
+      // 😎 CASE 2: Odd runs — cross ho gaye
+      if (outPlayer === 'striker') {
+        return `${
+          inning?.nonStriker?.name || 'Non-Striker'
+        } will become Non-Striker\nNew batter → Striker`;
+      } else {
+        return `${
+          inning?.striker?.name || 'Striker'
+        } will remain Striker\nNew batter → Non-Striker`;
+      }
+    } else {
+      // 😎 Even runs — same end wapas
+      if (outPlayer === 'striker') {
+        return `${
+          inning?.nonStriker?.name || 'Non-Striker'
+        } will become Striker\nNew batter → Non-Striker`;
+      } else {
+        return `${
+          inning?.striker?.name || 'Striker'
+        } will remain Striker\nNew batter → Striker`;
+      }
+    }
+  };
+
   // =====================================================
   // 😎 SUBMIT
   // =====================================================
@@ -98,6 +141,8 @@ const WicketModal = ({
     onConfirm(payload);
   };
 
+  const hint = getPositionHint();
+
   // =====================================================
   // 😎 UI
   // =====================================================
@@ -115,16 +160,10 @@ const WicketModal = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
-            {/* ===================================================== */}
             {/* 😎 TITLE */}
-            {/* ===================================================== */}
-
             <Text style={styles.title}>Wicket Details </Text>
 
-            {/* ===================================================== */}
             {/* 😎 WICKET TYPE */}
-            {/* ===================================================== */}
-
             <Text style={styles.label}>Wicket Type</Text>
 
             <View style={styles.row}>
@@ -132,7 +171,13 @@ const WicketModal = ({
                 <TouchableOpacity
                   key={item}
                   activeOpacity={0.8}
-                  onPress={() => setWicketType(item)}
+                  onPress={() => {
+                    setWicketType(item);
+                    if (item !== 'Run Out') {
+                      setOutPlayer('striker');
+                      setRunsCompleted(0);
+                    }
+                  }}
                   style={[styles.btn, wicketType === item && styles.activeBtn]}
                 >
                   <Text
@@ -152,128 +197,85 @@ const WicketModal = ({
             {/* 😎 OUT PLAYER */}
             {/* ===================================================== */}
 
-            <Text style={styles.label}>Who Got Out?</Text>
-
-            <View style={styles.row}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setOutPlayer('striker')}
-                style={[
-                  styles.btn,
-
-                  outPlayer === 'striker' && styles.activeBtn,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.btnText,
-
-                    outPlayer === 'striker' && styles.activeBtnText,
-                  ]}
-                >
-                  {inning?.striker?.name || 'Striker'} ⭐
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setOutPlayer('nonStriker')}
-                style={[
-                  styles.btn,
-
-                  outPlayer === 'nonStriker' && styles.activeBtn,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.btnText,
-
-                    outPlayer === 'nonStriker' && styles.activeBtnText,
-                  ]}
-                >
-                  {inning?.nonStriker?.name || 'Non-Striker'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* ===================================================== */}
-            {/* 😎 RUNS COMPLETED */}
-            {/* ===================================================== */}
-
-            <Text style={styles.label}>Runs Completed</Text>
-
-            <View style={styles.row}>
-              {[0, 1, 2, 3].map(item => (
-                <TouchableOpacity
-                  key={item}
-                  activeOpacity={0.8}
-                  onPress={() => setRunsCompleted(item)}
-                  style={[
-                    styles.btn,
-
-                    runsCompleted === item && styles.activeBtn,
-                  ]}
-                >
-                  <Text
+            {wicketType === 'Run Out' && (
+              <>
+                <Text style={styles.label}>Who Got Run Out?</Text>
+                <View style={styles.row}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setOutPlayer('striker')}
                     style={[
-                      styles.btnText,
-
-                      runsCompleted === item && styles.activeBtnText,
+                      styles.btn,
+                      outPlayer === 'striker' && styles.activeBtn,
                     ]}
                   >
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <Text
+                      style={[
+                        styles.btnText,
+                        outPlayer === 'striker' && styles.activeBtnText,
+                      ]}
+                    >
+                      {inning?.striker?.name || 'Striker'} ⭐
+                    </Text>
+                  </TouchableOpacity>
 
-            {/* ===================================================== */}
-            {/* 😎 NEW BATTER POSITION */}
-            {/* ===================================================== */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setOutPlayer('nonStriker')}
+                    style={[
+                      styles.btn,
+                      outPlayer === 'nonStriker' && styles.activeBtn,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.btnText,
+                        outPlayer === 'nonStriker' && styles.activeBtnText,
+                      ]}
+                    >
+                      {inning?.nonStriker?.name || 'Non-Striker'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-            <Text style={styles.label}>New Batter Position</Text>
+                {/* ===================================================== */}
+                {/* 😎 RUNS COMPLETED — sirf Run Out pe */}
+                {/* ===================================================== */}
+                <Text style={styles.label}>Runs Completed Before Runout</Text>
+                <View style={styles.row}>
+                  {[0, 1, 2, 3].map(item => (
+                    <TouchableOpacity
+                      key={item}
+                      activeOpacity={0.8}
+                      onPress={() => setRunsCompleted(item)}
+                      style={[
+                        styles.btn,
+                        runsCompleted === item && styles.activeBtn,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.btnText,
+                          runsCompleted === item && styles.activeBtnText,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-            <View style={styles.row}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setNewBatterEnd('striker')}
-                style={[
-                  styles.btn,
-
-                  newBatterEnd === 'striker' && styles.activeBtn,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.btnText,
-
-                    newBatterEnd === 'striker' && styles.activeBtnText,
-                  ]}
-                >
-                  Play as Striker
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setNewBatterEnd('nonStriker')}
-                style={[
-                  styles.btn,
-
-                  newBatterEnd === 'nonStriker' && styles.activeBtn,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.btnText,
-
-                    newBatterEnd === 'nonStriker' && styles.activeBtnText,
-                  ]}
-                >
-                  Play as Non-Striker
-                </Text>
-              </TouchableOpacity>
-            </View>
+                {/* 😎 POSITION HINT BOX */}
+                {!!hint && (
+                  <View style={styles.hintBox}>
+                    <Text style={styles.hintTitle}>
+                      📍 Position After Wicket
+                    </Text>
+                    <Text style={styles.hintText}>{hint}</Text>
+                  </View>
+                )}
+              </>
+            )}
 
             {/* ===================================================== */}
             {/* 😎 FIELDER SELECTION */}
@@ -419,6 +421,26 @@ const styles = StyleSheet.create({
     marginRight: 10,
 
     marginBottom: 10,
+  },
+
+  hintBox: {
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 10,
+  },
+  hintTitle: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  hintText: {
+    color: COLORS.text,
+    fontSize: 14,
+    lineHeight: 22,
   },
 
   activeBtn: {

@@ -127,34 +127,55 @@ const DashboardScreen = () => {
   const sortedPlayers = useMemo(() => {
     let sorted = [...players];
 
+    const withTiebreaker = (a: any, b: any, diff: number) => {
+      if (diff !== 0) return diff;
+      return (a?._id || '').localeCompare(b?._id || '');
+    };
+
     switch (activeCategory) {
       case 'Most Runs':
-        return sorted.sort((a, b) => (b?.runs || 0) - (a?.runs || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.runs || 0) - (a?.runs || 0)),
+        );
 
       case 'Most 6s':
-        return sorted.sort((a, b) => (b?.sixes || 0) - (a?.sixes || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.sixes || 0) - (a?.sixes || 0)),
+        );
 
       case 'Most 4s':
-        return sorted.sort((a, b) => (b?.fours || 0) - (a?.fours || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.fours || 0) - (a?.fours || 0)),
+        );
 
       case 'Most Wickets':
-        return sorted.sort((a, b) => (b?.wickets || 0) - (a?.wickets || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.wickets || 0) - (a?.wickets || 0)),
+        );
 
       case 'Best Economy':
-        return sorted.sort((a, b) => (a?.economy || 999) - (b?.economy || 999));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (a?.economy || 999) - (b?.economy || 999)),
+        );
 
       case 'Most Catches':
-        return sorted.sort((a, b) => (b?.catches || 0) - (a?.catches || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.catches || 0) - (a?.catches || 0)),
+        );
 
       case 'Most Dot Balls':
-        return sorted.sort((a, b) => (b?.dotBalls || 0) - (a?.dotBalls || 0));
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.dotBalls || 0) - (a?.dotBalls || 0)),
+        );
 
-      case 'Most 100s':
-        return sorted.sort((a, b) => (b?.centuries || 0) - (a?.centuries || 0));
+      case 'Most 30s':
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.thirties || 0) - (a?.thirties || 0)),
+        );
 
-      case 'Most 50s':
-        return sorted.sort(
-          (a, b) => (b?.halfCenturies || 0) - (a?.halfCenturies || 0),
+      case 'Most 40s':
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.forties || 0) - (a?.forties || 0)),
         );
 
       default:
@@ -186,11 +207,11 @@ const DashboardScreen = () => {
       case 'Most Dot Balls':
         return `${player?.dotBalls || 0} Dot Balls`;
 
-      case 'Most 100s':
-        return `${player?.centuries || 0} Centuries`;
+      case 'Most 30s':
+        return `${player?.thirties || 0} Thirties`;
 
-      case 'Most 50s':
-        return `${player?.halfCenturies || 0} Half Centuries`;
+      case 'Most 40s':
+        return `${player?.forties || 0} Forties`;
 
       default:
         return '0';

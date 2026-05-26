@@ -163,10 +163,15 @@ export const updateStrikeRate = (player?: PlayerStats | null) => {
 export const updateEconomy = (bowler?: BowlerStats | null) => {
   if (!bowler) return;
 
-  const overs = bowler.balls / 6;
+  const completedOvers = Math.floor(bowler.balls / 6);
+
+  const remainingBalls = bowler.balls % 6;
+
+  
+  const actualOvers = completedOvers + remainingBalls / 6;
 
   bowler.economy =
-    overs > 0 ? Number((bowler.runsGiven / overs).toFixed(2)) : 0;
+    actualOvers > 0 ? Number((bowler.runsGiven / actualOvers).toFixed(2)) : 0;
 };
 
 export const updateMatchStats = (inning: InningState, totalOvers: number) => {

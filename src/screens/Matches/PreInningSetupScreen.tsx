@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 
 import Animated, {
@@ -62,6 +63,8 @@ const PreInningSetupScreen = () => {
 
   const [loading, setLoading] = useState(true);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   const [battingPlayers, setBattingPlayers] = useState<any[]>([]);
 
   const [bowlingPlayers, setBowlingPlayers] = useState<any[]>([]);
@@ -83,9 +86,20 @@ const PreInningSetupScreen = () => {
     loadTeams();
   }, []);
 
-  const loadTeams = async () => {
+  const loadTeams = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      if (isRefresh) {
+        setStriker(null);
+        setNonStriker(null);
+        setBowler(null);
+        setSetupStep('batters');
+      }
 
       let battingTeamId = '';
       let bowlingTeamId = '';
@@ -194,7 +208,12 @@ const PreInningSetupScreen = () => {
       console.log('TEAM LOAD ERROR 😭', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadTeams(true);
   };
 
   // 😎 START MATCH
@@ -232,13 +251,16 @@ const PreInningSetupScreen = () => {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          {/* 😎 LOADING TEXT */}
+          <Text style={styles.loadingText}>Loading Players...</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    
     <View style={styles.container}>
       <Animated.View style={[styles.glow1, glowStyle]} />
 
@@ -275,6 +297,15 @@ const PreInningSetupScreen = () => {
         contentContainerStyle={{
           paddingBottom: 120,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[COLORS.primary]} // Android spinner color
+            tintColor={COLORS.primary} // iOS spinner color
+            progressBackgroundColor={COLORS.card} // Android background
+          />
+        }
       >
         {/* ================================================= */}
         {/* 😎 BATTER SELECTION SCREEN */}
@@ -328,10 +359,6 @@ const PreInningSetupScreen = () => {
                     <Text style={styles.playerInfo}>
                       {player?.batsmanType} Batsman
                     </Text>
-
-                    {/* <Text style={styles.playerInfo}>
-                      Role: {player?.role || 'Player'}
-                    </Text> */}
                   </View>
 
                   {/* 😎 RIGHT */}
@@ -472,6 +499,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
 
     backgroundColor: COLORS.background,
+  },
+
+  loadingText: {
+    color: COLORS.subText,
+    marginTop: 12,
+    fontSize: 14,
   },
 
   topCard: {

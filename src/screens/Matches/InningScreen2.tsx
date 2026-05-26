@@ -97,6 +97,16 @@ const InningScreen2 = () => {
 
   const route = useRoute<InningScreenRouteProp>();
 
+  const [autoPosition, setAutoPosition] = useState<
+    'striker' | 'nonStriker' | null
+  >(null);
+
+  const [showSurvivorModal, setShowSurvivorModal] = useState(false);
+  const [survivorData, setSurvivorData] = useState<{
+    survivingPlayer: any;
+    newBatterPosition: 'striker' | 'nonStriker';
+  } | null>(null);
+
   const navigation = useNavigation<any>();
 
   const { matchData, inningSetup, firstInningData } = route.params || {};
@@ -472,9 +482,11 @@ const InningScreen2 = () => {
       }
 
       // 😎 WICKET FLOW
-
-      // 😎 WICKET FLOW
       if (type === 'WKT') {
+        const isRunOut = wicketData?.wicketType === 'Run Out';
+        const runsCompleted = wicketData?.runsCompleted || 0;
+        const outPlayer = wicketData?.outPlayer || 'striker';
+
         const outPlayerId =
           wicketData?.outPlayer === 'nonStriker'
             ? prev.nonStriker?._id
@@ -494,37 +506,53 @@ const InningScreen2 = () => {
 
         // ✅ AISE KARO
         if (allOut) {
-          const firstTeamRuns = firstInningData?.totalRuns || 0;
-          const secondTeamRuns = updated.totalRuns;
-
-          const finalPlayerMap = { ...playerStatsMap };
-          if (updated.striker?._id)
-            finalPlayerMap[updated.striker._id] = updated.striker;
-          if (updated.nonStriker?._id)
-            finalPlayerMap[updated.nonStriker._id] = updated.nonStriker;
-          const finalBowlerMap = { ...bowlerStatsMap };
-          if (updated.bowler?._id)
-            finalBowlerMap[updated.bowler._id] = updated.bowler;
-
           setTimeout(() => {
-            setMatchResult({
-              winnerTeam: firstInningData?.battingTeam,
-              resultText: `${firstInningData?.battingTeam?.name} won by ${
-                firstTeamRuns - secondTeamRuns
-              } runs 😎🔥`,
-              secondInningData: {
-                ...updated,
-                playerStatsMap: finalPlayerMap,
-                bowlerStatsMap: finalBowlerMap,
-              },
-            });
-          }, 500);
+            setInningEnded(true);
+            Alert.alert('All Out! ', 'All players are out!');
+          }, 300);
         } else if (updated.wickets >= TEAM_SIZE - 1) {
           setShowBatterModal(false);
+          setAutoPosition(null);
+        } else if (isRunOut) {
+          const isOdd = runsCompleted % 2 === 1;
+          if (runsCompleted === 0) {
+            if (outPlayer === 'striker') {
+              updated.striker = { ...prev.nonStriker!, isStriker: true };
+              updated.nonStriker = null;
+              setAutoPosition('nonStriker');
+            } else {
+              updated.nonStriker = null;
+              setAutoPosition('nonStriker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          } else if (isOdd) {
+            if (outPlayer === 'striker') {
+              updated.striker = null; // new batter
+              updated.nonStriker = { ...prev.nonStriker!, isStriker: false };
+              setAutoPosition('striker');
+            } else {
+              updated.striker = { ...prev.striker!, isStriker: true };
+              updated.nonStriker = null; // new batter
+              setAutoPosition('nonStriker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          } else {
+            if (outPlayer === 'striker') {
+              updated.striker = { ...prev.nonStriker!, isStriker: true };
+              updated.nonStriker = null;
+              setAutoPosition('nonStriker');
+            } else {
+              updated.nonStriker = null;
+              setAutoPosition('striker');
+            }
+
+            setTimeout(() => setShowBatterModal(true), 300);
+          }
         } else {
-          setTimeout(() => {
-            setShowBatterModal(true);
-          }, 300);
+          setAutoPosition(null);
+          setTimeout(() => setShowBatterModal(true), 300);
         }
       }
 

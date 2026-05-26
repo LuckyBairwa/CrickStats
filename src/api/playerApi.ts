@@ -25,7 +25,7 @@ export const createPlayer = async (playerData: any) => {
 
 // 🏏 Update Player
 export const updatePlayer = async (id: string, playerData: any) => {
-  const response = await api.put(`/players/update-player/ ${id}`, playerData);
+  const response = await api.put(`/players/update-player/${id}`, playerData);
 
   return response.data;
 };

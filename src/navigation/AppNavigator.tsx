@@ -18,6 +18,7 @@ import AboutDeveloper from '../screens/Setting/AboutDeveloper';
 import EditPlayerScreen from '../screens/Players/EditPlayerScreen';
 import InningScreen2 from '../screens/Matches/InningScreen2';
 import WinnerScreen from '../screens/Winner/WinnerScreen';
+import MatchDetailsScreen from '../screens/Matches/MatchDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,7 @@ const AppNavigator = () => {
       <Stack.Screen name="AboutDeveloper" component={AboutDeveloper} />
       <Stack.Screen name="EditPlayer" component={EditPlayerScreen} />
       <Stack.Screen name="WinnerScreen" component={WinnerScreen} />
+      <Stack.Screen name="MatchDetails" component={MatchDetailsScreen} />
     </Stack.Navigator>
   );
 };

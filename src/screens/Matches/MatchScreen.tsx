@@ -8,15 +8,14 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Modal,
-  ScrollView,
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  Platform,
 } from 'react-native';
 
-import { Trophy, CalendarClock, CircleX } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+
+import { Trophy, CalendarClock } from 'lucide-react-native';
 
 import Animated, {
   FadeInDown,
@@ -37,9 +36,8 @@ import { getMatches } from '../../api/matchApi';
 const theme = COLORS;
 
 const MatchesScreen = () => {
+  const navigation = useNavigation<any>();
   const [matches, setMatches] = useState<any[]>([]);
-
-  const [selectedMatch, setSelectedMatch] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -143,7 +141,11 @@ const MatchesScreen = () => {
               shadowColor: theme.glow,
             },
           ]}
-          onPress={() => setSelectedMatch(item)}
+          onPress={() =>
+            navigation.navigate('MatchDetails', {
+              match: item,
+            })
+          }
         >
           <View style={styles.topRow}>
             <Text
@@ -314,253 +316,6 @@ const MatchesScreen = () => {
           }
         />
       )}
-
-      {/* 😎 Match Details Modal */}
-      <Modal visible={selectedMatch !== null} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View
-            style={[
-              styles.modalContent,
-              {
-                backgroundColor: theme.background,
-              },
-            ]}
-          >
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Close Button */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSelectedMatch(null)}
-              >
-                <CircleX size={28} color={theme.text} />
-              </TouchableOpacity>
-
-              {/* Teams */}
-              <Text
-                style={[
-                  styles.modalTeams,
-                  {
-                    color: theme.text,
-                  },
-                ]}
-              >
-                {selectedMatch?.teamA?.name || selectedMatch?.teamA} vs{' '}
-                {selectedMatch?.teamB?.name || selectedMatch?.teamB}
-              </Text>
-
-              {/* Result */}
-              <Text
-                style={[
-                  styles.modalResult,
-                  {
-                    color: '#22C55E',
-                  },
-                ]}
-              >
-                {selectedMatch?.result || 'Result Pending'}
-              </Text>
-
-              {/* Match Info */}
-              <View
-                style={[
-                  styles.section,
-                  {
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    {
-                      color: theme.text,
-                    },
-                  ]}
-                >
-                  📌 Match Information
-                </Text>
-
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  📅 Date :{' '}
-                  {selectedMatch?.matchDate
-                    ? new Date(selectedMatch.matchDate).toLocaleDateString(
-                        'en-IN',
-                        {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        },
-                      )
-                    : 'N/A'}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  🏏 Overs : {selectedMatch?.overs || 0}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  {selectedMatch?.innings1?.battingTeam?.name ||
-                    selectedMatch?.innings1?.battingTeam ||
-                    'First Innings'}{' '}
-                  Score :{' '}
-                  {selectedMatch?.innings1
-                    ? `${selectedMatch.innings1.totalRuns}/${selectedMatch.innings1.wickets}`
-                    : '0/0'}
-                </Text>
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  {selectedMatch?.innings2?.battingTeam?.name ||
-                    selectedMatch?.innings2?.battingTeam ||
-                    'Second Innings'}{' '}
-                  Score :{' '}
-                  {selectedMatch?.innings2
-                    ? `${selectedMatch.innings2.totalRuns}/${selectedMatch.innings2.wickets}`
-                    : '0/0'}
-                </Text>
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  {/* Toss winner N/A why */}
-                  🪙 Toss Winner : {selectedMatch?.tossWinner || 'N/A'}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  🎯 Decision : {selectedMatch?.tossDecision || 'N/A'}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.infoText,
-                    {
-                      color: theme.subText,
-                    },
-                  ]}
-                >
-                  🏆 Winner : {selectedMatch?.winner?.name || 'N/A'}
-                </Text>
-              </View>
-
-              {/* Score Section */}
-              <View
-                style={[
-                  styles.section,
-                  {
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    {
-                      color: theme.text,
-                    },
-                  ]}
-                >
-                  📊 Match Score
-                </Text>
-
-                <View style={styles.scoreBox}>
-                  <Text
-                    style={[
-                      styles.scoreTeam,
-                      {
-                        color: theme.text,
-                      },
-                    ]}
-                  >
-                    {selectedMatch?.innings1?.battingTeam?.name || 'Team A'}
-                  </Text>
-
-                  <Text
-                    style={[
-                      styles.score,
-                      {
-                        color: theme.primary,
-                      },
-                    ]}
-                  >
-                    {selectedMatch?.innings1
-                      ? `${selectedMatch.innings1.totalRuns}/${selectedMatch.innings1.wickets}`
-                      : '0/0'}
-                  </Text>
-                </View>
-
-                <View style={styles.scoreBox}>
-                  <Text
-                    style={[
-                      styles.scoreTeam,
-                      {
-                        color: theme.text,
-                      },
-                    ]}
-                  >
-                    {selectedMatch?.innings2?.battingTeam?.name || 'Team B'}
-                  </Text>
-
-                  <Text
-                    style={[
-                      styles.score,
-                      {
-                        color: theme.primary,
-                      },
-                    ]}
-                  >
-                    {selectedMatch?.innings2
-                      ? `${selectedMatch.innings2.totalRuns}/${selectedMatch.innings2.wickets}`
-                      : '0/0'}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={{ height: 60 }} />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -727,93 +482,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
 
     lineHeight: 24,
-  },
-
-  modalContainer: {
-    flex: 1,
-
-    backgroundColor: 'rgba(0,0,0,0.6)',
-
-    justifyContent: 'flex-end',
-  },
-
-  modalContent: {
-    height: '92%',
-
-    borderTopLeftRadius: 30,
-
-    borderTopRightRadius: 30,
-
-    paddingHorizontal: 18,
-
-    paddingTop: 20,
-  },
-
-  closeButton: {
-    alignSelf: 'flex-end',
-  },
-
-  modalTeams: {
-    fontSize: 28,
-
-    fontWeight: 'bold',
-
-    marginTop: 10,
-  },
-
-  modalResult: {
-    fontSize: 18,
-
-    marginTop: 10,
-
-    fontWeight: '600',
-  },
-
-  section: {
-    marginTop: 24,
-
-    borderRadius: 22,
-
-    padding: 18,
-
-    borderWidth: 1,
-  },
-
-  sectionTitle: {
-    fontSize: 22,
-
-    fontWeight: 'bold',
-
-    marginBottom: 16,
-  },
-
-  infoText: {
-    fontSize: 15,
-
-    marginBottom: 10,
-  },
-
-  scoreBox: {
-    backgroundColor: '#0B1220',
-
-    borderRadius: 18,
-
-    padding: 18,
-
-    marginBottom: 14,
-  },
-
-  scoreTeam: {
-    fontSize: 18,
-
-    fontWeight: 'bold',
-  },
-
-  score: {
-    fontSize: 30,
-
-    fontWeight: 'bold',
-
-    marginTop: 10,
   },
 });
