@@ -13,7 +13,7 @@ import {
   RefreshControl,
 } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { Trophy, CalendarClock } from 'lucide-react-native';
 
@@ -31,7 +31,7 @@ import Animated, {
 import COLORS from '../../constants/colors';
 
 // 😎 Import Your Match API
-import { getMatches } from '../../api/matchApi';
+import { getMatches, deleteMatch } from '../../api/matchApi';
 
 const theme = COLORS;
 
@@ -81,7 +81,7 @@ const MatchesScreen = () => {
 
       setMatches(data);
     } catch (error) {
-      console.log('Matches Fetch Error 😭', error);
+      console.log('Matches Fetch Error ', error);
 
       setMatches([]);
     } finally {
@@ -90,9 +90,11 @@ const MatchesScreen = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchMatches();
-  }, [fetchMatches]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchMatches();
+    }, [fetchMatches]),
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
