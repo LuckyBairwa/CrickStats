@@ -1,6 +1,6 @@
 // src/screens/Dashboard/DashboardScreen.tsx 😎🔥
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   View,
@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   Trophy,
   Flame,
@@ -106,9 +106,11 @@ const DashboardScreen = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPlayers();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPlayers();
+    }, []),
+  );
 
   // 😎 Categories
   const categories = [

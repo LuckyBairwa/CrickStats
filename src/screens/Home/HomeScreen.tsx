@@ -1,8 +1,8 @@
 // src/screens/Home/HomeScreen.tsx
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import {
   View,
@@ -137,9 +137,11 @@ const HomeScreen = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboard();
+    }, []),
+  );
 
   // 😎 Greeting
   const greeting = useMemo(() => {

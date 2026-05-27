@@ -39,11 +39,6 @@ import {
   handleBallEvent,
   undoBall,
   redoBall,
-  swapStrike,
-  formatOvers,
-  updateStrikeRate,
-  updateEconomy,
-  updateMatchStats,
   InningState,
   PlayerStats,
 } from '../../utils/matchEngine';
@@ -108,6 +103,9 @@ const InningScreen = () => {
   const [showRestModal, setShowRestModal] = useState(false);
 
   const [showBowlerModal, setShowBowlerModal] = useState(false);
+
+  // States mein add karo
+  const [isRunOutFlow, setIsRunOutFlow] = useState(false);
 
   const [showBatterModal, setShowBatterModal] = useState(false);
 
@@ -393,49 +391,42 @@ const InningScreen = () => {
         } else if (updated.wickets >= TEAM_SIZE - 1) {
           setShowBatterModal(false);
           setAutoPosition(null);
-        } 
-        else if (isRunOut) {
-          const isOdd = runsCompleted % 2 === 1;
-          if (runsCompleted === 0) {
-            if (outPlayer === 'striker') {
-              updated.striker = { ...prev.nonStriker!, isStriker: true };
-              updated.nonStriker = null;
-              setAutoPosition('nonStriker');
-            } else {
-              updated.nonStriker = null;
-              setAutoPosition('striker');
-            }
-
-            setTimeout(() => setShowBatterModal(true), 300);
-          } else if (isOdd) {
-            if (outPlayer === 'striker') {
-              updated.striker = null; // new batter
-              updated.nonStriker = { ...prev.nonStriker!, isStriker: false };
-              setAutoPosition('striker');
-            } else {
-              updated.striker = { ...prev.striker!, isStriker: true };
-              updated.nonStriker = null; // new batter
-              setAutoPosition('nonStriker');
-            }
-
-            setTimeout(() => setShowBatterModal(true), 300);
-          } else {
-            if (outPlayer === 'striker') {
-              updated.striker = { ...prev.nonStriker!, isStriker: true };
-              updated.nonStriker = null;
-              setAutoPosition('nonStriker');
-            } else {
-              updated.nonStriker = null;
-              setAutoPosition('striker');
-            }
-
-            setTimeout(() => setShowBatterModal(true), 300);
+          setSurvivorData(null);
+          setIsRunOutFlow(false);
+        } else if (isRunOut) {
+          setIsRunOutFlow(true);
+          if (runsCompleted > 0 && prev.striker) {
+            updated.striker = {
+              ...updated.striker!,
+              runs: (updated.striker?.runs || 0) + runsCompleted,
+              balls: updated.striker?.balls || 0,
+            };
           }
-        } 
-        else {
+
+          const survivingPlayer =
+            outPlayer === 'striker'
+              ? { ...prev.nonStriker! }
+              : { ...prev.striker! };
+
+          updated.striker = null;
+          updated.nonStriker = null;
+
+          setSurvivorData({
+            survivingPlayer,
+            newBatterPosition: 'striker',
+          });
           setAutoPosition(null);
           setTimeout(() => setShowBatterModal(true), 300);
+        } else {
+          setSurvivorData(null);
+          setIsRunOutFlow(false);
+          setAutoPosition('striker');
+          setTimeout(() => setShowBatterModal(true), 300);
         }
+      } else {
+        setSurvivorData(null);
+        setIsRunOutFlow(false);
+        setAutoPosition('striker');
       }
 
       // 😎 OVER COMPLETE
@@ -491,11 +482,9 @@ const InningScreen = () => {
     player: any,
     battingPosition: 'striker' | 'nonStriker',
   ) => {
-    setInning(prev => {
-      // 😎 EXISTING PLAYER STATS CHECK
+    setInning((prev: any) => {
       const existingPlayer = playerStatsMap[player._id];
 
-      // 😎 IF PLAYER ALREADY PLAYED BEFORE
       const newBatter: PlayerStats = existingPlayer || {
         _id: player._id,
         name: player.name,
@@ -508,31 +497,33 @@ const InningScreen = () => {
         isStriker: battingPosition === 'striker',
       };
 
+      const newStriker =
+        battingPosition === 'striker'
+          ? { ...newBatter, isStriker: true }
+          : prev.striker
+          ? { ...prev.striker, isStriker: true }
+          : null;
+
+      const newNonStriker =
+        battingPosition === 'nonStriker'
+          ? { ...newBatter, isStriker: false }
+          : prev.nonStriker
+          ? { ...prev.nonStriker, isStriker: false }
+          : null;
+
       return {
         ...prev,
-
         usedBatters: [...new Set([...prev.usedBatters, player._id])],
 
-        striker:
-          battingPosition === 'striker'
-            ? {
-                ...newBatter,
-                isStriker: true,
-              }
-            : prev.striker,
-
-        nonStriker:
-          battingPosition === 'nonStriker'
-            ? {
-                ...newBatter,
-                isStriker: false,
-              }
-            : prev.nonStriker,
+        striker: newStriker,
+        nonStriker: newNonStriker,
       };
     });
 
     setAutoPosition(null);
+    setSurvivorData(null);
     setShowBatterModal(false);
+    setIsRunOutFlow(false);
   };
 
   // 😎 NEW BOWLER
@@ -596,8 +587,8 @@ const InningScreen = () => {
         {/* 😎 BATTERS */}
         {(inning?.striker || inning?.nonStriker) && (
           <BatterTable
-            striker={inning.striker || inning.nonStriker}
-            nonStriker={inning.nonStriker}
+            striker={inning.striker ?? null}
+            nonStriker={inning.nonStriker ?? null}
           />
         )}
 
@@ -789,96 +780,286 @@ const InningScreen = () => {
       {/* 😎 NEW BATTER MODAL */}
       {/* ===================================================== */}
 
+      {/* <Modal visible={showBatterModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <ScrollView
+            style={styles.modalContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.modalTitle}>Select New Batter</Text>
+
+             
+            {autoPosition === null ? (
+              <>
+                <Text
+                  style={[
+                    styles.playerInfo,
+                    {
+                      marginBottom: 16,
+                      fontSize: 14,
+                      color: COLORS.subText,
+                    },
+                  ]}
+                >
+                  Surviving player ki position confirm karo:
+                </Text>
+
+                <View
+                  style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}
+                >
+                  
+                  {inning?.striker && (
+                    <TouchableOpacity
+                      style={[
+                        styles.positionBtn,
+                        { backgroundColor: '#06B6D4' },
+                      ]}
+                      onPress={() => setAutoPosition('nonStriker')}
+                    >
+                      <Text style={styles.positionBtnText}>
+                        {inning.striker.name}
+                        {'\n'}
+                        <Text style={{ fontSize: 11 }}>Striker rahega</Text>
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  
+                  {inning?.nonStriker && (
+                    <TouchableOpacity
+                      style={[
+                        styles.positionBtn,
+                        { backgroundColor: '#8B5CF6' },
+                      ]}
+                      onPress={() => setAutoPosition('striker')}
+                    >
+                      <Text style={styles.positionBtnText}>
+                        {inning.nonStriker.name}
+                        {'\n'}
+                        <Text style={{ fontSize: 11 }}>Non-Striker rahega</Text>
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            ) : (
+            
+              <>
+                <View
+                  style={{
+                    backgroundColor: '#0F172A',
+                    borderRadius: 14,
+                    padding: 12,
+                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: COLORS.primary,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: COLORS.primary,
+                      fontWeight: 'bold',
+                      fontSize: 13,
+                    }}
+                  >
+                    📍 New batter will be{' '}
+                    {autoPosition === 'striker' ? 'Striker ⭐' : 'Non-Striker'}
+                  </Text>
+                </View>
+
+                {battingPlayers
+                  .filter((item: any) => {
+                    const playerStats = playerStatsMap[item._id];
+                    const isOut = playerStats?.status === 'Out';
+                    const alreadyPlaying =
+                      (inning?.striker?._id &&
+                        item._id === inning.striker._id) ||
+                      (inning?.nonStriker?._id &&
+                        item._id === inning.nonStriker._id);
+                    const lastOutPlayerId = inning?.lastWicket?.outPlayerId;
+                    const isLastOut = item._id === lastOutPlayerId;
+                    return !isOut && !alreadyPlaying && !isLastOut;
+                  })
+                  .map((item: any) => (
+                    <TouchableOpacity
+                      key={item._id}
+                      activeOpacity={0.8}
+                      style={styles.playerBtn}
+                      onPress={() => selectNewBatter(item, autoPosition)}
+                    >
+                      <Text style={styles.playerName}>{item.name}</Text>
+                      <Text style={styles.playerInfo}>{item.batsmanType}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </Modal> */}
+
       <Modal visible={showBatterModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <ScrollView
             style={styles.modalContainer}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.modalTitle}>Select New Batter </Text>
+            <Text style={styles.modalTitle}>Select New Batter 😎</Text>
 
-            {battingPlayers
-              .filter((item: any) => {
-                const playerStats = playerStatsMap[item._id];
+            {/* =====================================================
+          😎 STEP 1: Surviving player ki position choose karo
+          survivorData set hai aur autoPosition null hai
+      ===================================================== */}
+            {survivorData !== null && autoPosition === null ? (
+              <>
+                <Text
+                  style={[
+                    styles.playerInfo,
+                    { marginBottom: 20, fontSize: 15 },
+                  ]}
+                >
+                  <Text style={{ color: COLORS.text, fontWeight: 'bold' }}>
+                    {survivorData.survivingPlayer.name}
+                  </Text>{' '}
+                  ki position choose karo:
+                </Text>
 
-                // 😎 OUT PLAYERS
-                const isOut = playerStats?.status === 'Out';
-
-                // 😎 LAST OUT PLAYER
-                const lastOutPlayerId = inning?.lastWicket?.playerId;
-
-                const isLastOutPlayer = item._id === lastOutPlayerId;
-
-                // 😎 CURRENT PLAYERS
-                const alreadyPlaying =
-                  (inning?.striker?._id && item._id === inning.striker._id) ||
-                  (inning?.nonStriker?._id &&
-                    item._id === inning.nonStriker._id);
-
-                return !isOut && !alreadyPlaying && !isLastOutPlayer;
-              })
-              .map((item: any) => (
-                <View
-                  key={item._id}
+                {/* Striker button */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
                   style={{
-                    marginBottom: 14,
+                    backgroundColor: '#06B6D4',
+                    padding: 20,
+                    borderRadius: 18,
+                    alignItems: 'center',
+                    marginBottom: 12,
+                  }}
+                  onPress={() => {
+                    setInning((prev: any) => ({
+                      ...prev,
+                      striker: {
+                        ...survivorData.survivingPlayer,
+                        isStriker: true,
+                      },
+                      nonStriker: null,
+                    }));
+                    setSurvivorData(null);
+                    setAutoPosition('nonStriker');
                   }}
                 >
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.playerBtn}
+                  <Text
+                    style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}
                   >
-                    <Text style={styles.playerName}>{item.name}</Text>
+                    ⭐ Striker
+                  </Text>
+                  <Text
+                    style={{
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 13,
+                      marginTop: 4,
+                    }}
+                  >
+                    New batter → Non-Striker
+                  </Text>
+                </TouchableOpacity>
 
-                    <Text style={styles.playerInfo}>{item.batsmanType}</Text>
-                  </TouchableOpacity>
-
-                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-                    {autoPosition ? (
-                      <TouchableOpacity
-                        style={[
-                          styles.positionBtn,
-                          { backgroundColor: '#06B6D4', flex: 1 },
-                        ]}
-                        onPress={() => selectNewBatter(item, autoPosition)}
+                {/* NonStriker button */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={{
+                    backgroundColor: '#8B5CF6',
+                    padding: 20,
+                    borderRadius: 18,
+                    alignItems: 'center',
+                  }}
+                  onPress={() => {
+                    // Surviving player → NonStriker
+                    // New batter → Striker (auto)
+                    setInning((prev: any) => ({
+                      ...prev,
+                      striker: null,
+                      nonStriker: {
+                        ...survivorData.survivingPlayer,
+                        isStriker: false,
+                      },
+                    }));
+                    setSurvivorData(null);
+                    setAutoPosition('striker');
+                  }}
+                >
+                  <Text
+                    style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}
+                  >
+                    Non-Striker
+                  </Text>
+                  <Text
+                    style={{
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 13,
+                      marginTop: 4,
+                    }}
+                  >
+                    New batter → Striker ⭐
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              /* =====================================================
+           😎 STEP 2: autoPosition set — new batter list
+        ===================================================== */
+              <>
+                {/* Context box */}
+                {isRunOutFlow &&
+                  survivorData === null &&
+                  autoPosition !== null && (
+                    <View
+                      style={{
+                        backgroundColor: '#0F172A',
+                        borderRadius: 14,
+                        padding: 12,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: COLORS.primary,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: COLORS.primary,
+                          fontWeight: 'bold',
+                          fontSize: 13,
+                        }}
                       >
-                        <Text style={styles.positionBtnText}>
-                          Play as{' '}
-                          {autoPosition === 'striker'
-                            ? 'Striker'
-                            : 'Non-Striker'}
-                        </Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <>
-                        <TouchableOpacity
-                          style={[
-                            styles.positionBtn,
-                            { backgroundColor: '#06B6D4' },
-                          ]}
-                          onPress={() => selectNewBatter(item, 'striker')}
-                        >
-                          <Text style={styles.positionBtnText}>
-                            Play as Striker
-                          </Text>
-                        </TouchableOpacity>
+                        📍 New batter →{' '}
+                        {autoPosition === 'striker'
+                          ? 'Striker ⭐'
+                          : 'Non-Striker'}
+                      </Text>
+                    </View>
+                  )}
 
-                        <TouchableOpacity
-                          style={[
-                            styles.positionBtn,
-                            { backgroundColor: '#8B5CF6' },
-                          ]}
-                          onPress={() => selectNewBatter(item, 'nonStriker')}
-                        >
-                          <Text style={styles.positionBtnText}>
-                            Play as Non-Striker
-                          </Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
-                  </View>
-                </View>
-              ))}
+                {battingPlayers
+                  .filter((item: any) => {
+                    const playerStats = playerStatsMap[item._id];
+                    const isOut = playerStats?.status === 'Out';
+                    const alreadyPlaying =
+                      (inning?.striker?._id &&
+                        item._id === inning.striker._id) ||
+                      (inning?.nonStriker?._id &&
+                        item._id === inning.nonStriker._id);
+                    return !isOut && !alreadyPlaying;
+                  })
+                  .map((item: any) => (
+                    <TouchableOpacity
+                      key={item._id}
+                      activeOpacity={0.8}
+                      style={styles.playerBtn}
+                      onPress={() => selectNewBatter(item, autoPosition!)}
+                    >
+                      <Text style={styles.playerName}>{item.name}</Text>
+                      <Text style={styles.playerInfo}>{item.batsmanType}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </>
+            )}
           </ScrollView>
         </View>
       </Modal>
