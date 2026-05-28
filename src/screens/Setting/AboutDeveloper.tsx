@@ -21,9 +21,12 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { Laptop, UserRoundPen } from 'lucide-react-native';
 
 const AboutDeveloper = () => {
   const glow = useSharedValue(0.5);
+
+  const theme = COLORS;
 
   useEffect(() => {
     glow.value = withRepeat(
@@ -65,10 +68,17 @@ const AboutDeveloper = () => {
           entering={FadeInDown.duration(700)}
           style={styles.header}
         >
-          <Text style={styles.heading}>👨‍💻 About Developer</Text>
+          {/* 😎 Icon + Heading Row */}
+          <View style={styles.headingRow}>
+            <View style={styles.iconBox}>
+              <UserRoundPen size={30} color={theme.primary} />
+            </View>
+
+            <Text style={styles.heading}>About Developer</Text>
+          </View>
 
           <Text style={styles.subHeading}>
-            Meet the creator behind Gully Cricket 😎
+            Meet the creator behind Gully Cricket Scoring App
           </Text>
         </Animated.View>
 
@@ -82,44 +92,52 @@ const AboutDeveloper = () => {
             style={styles.image}
           />
 
-          <Text style={styles.name}>Lucky Bairwa 😎</Text>
+          <Text style={styles.name}>Lucky Bairwa </Text>
 
           <Text style={styles.role}>
-            React Native Developer • UI Designer • Trainer
+            React Native Developer • Learner • Trainer
           </Text>
         </Animated.View>
 
         {/* 😎 ABOUT */}
         <Animated.View entering={FadeInUp.delay(500)} style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>🚀 About Me</Text>
+          <Text style={styles.sectionTitle}> About Me</Text>
 
           <Text style={styles.desc}>
-            Hey 👋 I'm Lucky from Rajasthan, India. I'm passionate about
-            building modern mobile apps with React Native and creating beautiful
-            futuristic UI/UX experiences.
-            {'\n\n'}I love teaching programming in simple ways and continuously
-            improving my skills in full-stack development, animations, AI, and
-            mobile technologies 😎
+            Hey I'm Lucky Bairwa from Rajasthan, India
+            {'\n\n'}Currently, I am pursuing my Bachelor of Computer
+            Applications (BCA) and deeply exploring the world of modern app
+            development, UI/UX, animations, AI, and full-stack technologies.
+            {'\n\t\t'}I specialize in React Native and React JS development and
+            love creating futuristic, smooth and premium mobile applications
+            with powerful user experiences.
+            {'\n\n'}Some of my major projects include:
+            {'\n'}• Gully Cricket Scoring App 
+            {'\n'}• Modern Portfolio Apps 
+            {'\n'}• Animated Mobile UI Systems {'\n\n\t\t'}Apart from development,
+            I also enjoy teaching programming in simple and practical ways. I
+            continuously learn new technologies and improve my problem-solving,
+            design and development skills every day to create amazing apps and share my knowledge with the community.
           </Text>
         </Animated.View>
 
         {/* 😎 SKILLS */}
         <Animated.View entering={FadeInUp.delay(700)} style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>⚡ Skills</Text>
+          <Text style={styles.sectionTitle}> Skills</Text>
 
           <Text style={styles.desc}>
-            • React Native{'\n'}• React JS{'\n'}• TypeScript{'\n'}• Firebase
-            {'\n'}• Node.js{'\n'}• UI/UX Design{'\n'}• Reanimated Animations
-            {'\n'}• AI & ML Learning
+            • React Native{'\n'}• React JS{'\n'}• JavaScript{'\n'}• HTML & CSS
+            {'\n'}• Node.js{'\n'}• Reanimated Animations
+            {'\n'}• C++ programming{'\n'}• C programming
           </Text>
         </Animated.View>
 
         {/* 😎 GOAL */}
         <Animated.View entering={FadeInUp.delay(900)} style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>🎯 Mission</Text>
+          <Text style={styles.sectionTitle}> Mission</Text>
 
           <Text style={styles.desc}>
-            Building modern apps that feel premium, futuristic and powerful 😎🔥
+            Building modern apps that feel premium, futuristic and powerful
           </Text>
         </Animated.View>
 
@@ -154,26 +172,37 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 200,
-    // backgroundColor: '#8B5CF622',
     backgroundColor: '#00F5FF22',
     bottom: 50,
     left: -70,
   },
-
   header: {
     marginBottom: 30,
   },
 
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  iconBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    marginRight: 12,
+  },
+
   heading: {
     color: COLORS.text,
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
   },
 
   subHeading: {
     color: COLORS.subText,
-    marginTop: 6,
+    marginTop: 10,
     fontSize: 15,
+    marginLeft: 56,
   },
 
   profileCard: {

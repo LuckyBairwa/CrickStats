@@ -52,77 +52,98 @@ const RulesScreen = () => {
   const rules = [
     {
       text: 'Each team can play with 11 players.',
-      icon: ShieldCheck,
     },
 
     {
       text: 'The toss winner chooses batting or bowling first.',
-      icon: Goal,
-    },
-
-    {
-      text: 'A legal delivery must be bowled within the crease line.',
-      icon: CircleDot,
-    },
-
-    {
-      text: 'Wide and No Ball deliveries give extra runs.',
-      icon: Award,
-    },
-
-    {
-      text: 'A batsman is out if the stumps are broken while batting.',
-      icon: Gavel,
-    },
-
-    {
-      text: 'Catch-out is valid only if the ball is caught before touching ground.',
-      icon: Handshake,
-    },
-
-    {
-      text: 'A run-out happens when the batsman fails to reach the crease.',
-      icon: Goal,
-    },
-
-    {
-      text: 'LBW can be considered if the ball hits the leg before the bat.',
-      icon: ShieldCheck,
-    },
-
-    {
-      text: 'Boundary touching the rope gives 4 runs.',
-      icon: Award,
-    },
-
-    {
-      text: 'If the ball crosses boundary without bounce, it gives 6 runs.',
-      icon: Trophy,
     },
 
     {
       text: 'Every over contains 6 legal deliveries.',
-      icon: CircleDot,
     },
 
     {
-      text: 'Bowler cannot bowl two consecutive overs in some local formats.',
-      icon: Gavel,
+      text: 'Wide ball gives 1 extra run and the ball is rebowled.',
     },
 
     {
-      text: 'Umpire decision is final during the match.',
-      icon: ShieldCheck,
+      text: 'No Ball gives 1 extra run and batsman can score free runs.',
     },
 
     {
-      text: 'Strike rate and economy are important player statistics.',
-      icon: Award,
+      text: 'Free Hit allows batsman to play without getting out except run out.',
+    },
+
+    {
+      text: 'Bye runs are scored when ball misses bat and body completely.',
+    },
+
+    {
+      text: 'Leg Bye runs are counted when ball touches batsman body or pad.',
+    },
+
+    {
+      text: 'LBW occurs if ball hits leg before bat and would hit stumps.',
+    },
+
+    {
+      text: 'A batsman is out if stumps are broken before reaching crease.',
+    },
+
+    {
+      text: 'Catch out is valid only before ball touches the ground.',
+    },
+
+    {
+      text: 'Boundary touching rope gives 4 runs.',
+    },
+
+    {
+      text: 'Ball crossing boundary without bounce gives 6 runs.',
+    },
+
+    {
+      text: 'Run out happens if fielders break stumps while batsman is outside crease.',
+    },
+
+    {
+      text: 'Dot ball means no run scored on a legal delivery.',
+    },
+
+    {
+      text: 'Strike Rate shows how fast a batsman scores runs.',
+    },
+
+    {
+      text: 'Economy Rate shows runs given by bowler per over.',
+    },
+
+    {
+      text: 'Dead ball means delivery is cancelled and not counted.',
+    },
+
+    {
+      text: 'Overthrow runs are counted if fielding team throws ball away.',
+    },
+
+    {
+      text: 'If wickets fall completely, innings is declared all out.',
+    },
+
+    {
+      text: 'Late run means batsmen complete run before wicket is broken.',
+    },
+
+    {
+      text: 'A batsman must stand inside crease to stay safe from run out.',
+    },
+
+    {
+      text: 'Bowler foot crossing crease line results in No Ball.',
     },
 
     {
       text: 'Fair play and sportsmanship must always be maintained.',
-      icon: Handshake,
     },
   ];
 
@@ -211,7 +232,6 @@ const RulesScreen = () => {
 
         {/* 😎 Rules List */}
         {rules.map((rule, index) => {
-          const RuleIcon = rule.icon;
           return (
             <Animated.View
               key={index}
@@ -233,7 +253,7 @@ const RulesScreen = () => {
                     },
                   ]}
                 >
-                  <RuleIcon size={18} color="#000" strokeWidth={3} />
+                  <Text style={styles.numberText}>{index + 1}</Text>
                 </View>
 
                 <Text
@@ -272,7 +292,7 @@ const RulesScreen = () => {
                 },
               ]}
             >
-              Play Fair & Enjoy Cricket 
+              Play Fair & Enjoy Cricket
             </Text>
 
             <Text
