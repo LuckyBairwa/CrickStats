@@ -33,6 +33,8 @@ import { getTeams } from '../api/teamApi';
 
 import COLORS from '../constants/colors';
 
+import CreateMatchSkeleton from './CreateMatchSkeleton';
+
 const MatchForm = ({ onSubmit }: any) => {
   const navigation = useNavigation<any>();
 
@@ -210,11 +212,7 @@ const MatchForm = ({ onSubmit }: any) => {
   };
   // 😎 Loader
   if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
+    return <CreateMatchSkeleton />;
   }
 
   return (
