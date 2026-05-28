@@ -41,6 +41,8 @@ import Animated, {
 
 import COLORS from '../../constants/colors';
 
+import DashboardSkeleton from '../../components/DashboardSkeleton';
+
 import { getPlayers } from '../../api/playerApi';
 
 const DashboardScreen = () => {
@@ -272,15 +274,8 @@ const DashboardScreen = () => {
     return theme.primary;
   };
 
-  // 😎 Loading
   if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={theme.primary} />
-
-        <Text style={styles.loadingText}>Loading Dashboard...</Text>
-      </View>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (

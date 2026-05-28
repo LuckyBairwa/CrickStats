@@ -12,6 +12,8 @@ import {
   RefreshControl,
 } from 'react-native';
 
+import PlayersSkeleton from '../../components/PlayersSkeleton';
+
 import { useNavigation } from '@react-navigation/native';
 
 import Animated, {
@@ -163,31 +165,8 @@ const PlayersScreen = () => {
     });
   }, [filteredPlayers, activeSort]);
 
-  // 😎 Loading
   if (loading) {
-    return (
-      <View
-        style={[
-          styles.loader,
-          {
-            backgroundColor: theme.background,
-          },
-        ]}
-      >
-        <ActivityIndicator size="large" color={theme.primary} />
-
-        <Text
-          style={[
-            styles.loadingText,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          Loading Players...
-        </Text>
-      </View>
-    );
+    return <PlayersSkeleton />;
   }
 
   return (
@@ -236,7 +215,7 @@ const PlayersScreen = () => {
               },
             ]}
           >
-            Manage all cricket players 
+            Manage all cricket players
           </Text>
         </View>
       </Animated.View>

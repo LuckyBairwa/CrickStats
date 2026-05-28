@@ -15,6 +15,8 @@ import {
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
+import MatchSkeleton from '../../components/MatchSkeleton';
+
 import { Trophy, CalendarClock } from 'lucide-react-native';
 
 import Animated, {
@@ -102,31 +104,8 @@ const MatchesScreen = () => {
     await fetchMatches();
   };
 
-  // 😎 Loading Screen
   if (loading) {
-    return (
-      <View
-        style={[
-          styles.loaderContainer,
-          {
-            backgroundColor: theme.background,
-          },
-        ]}
-      >
-        <ActivityIndicator size="large" color={theme.primary} />
-
-        <Text
-          style={[
-            styles.loaderText,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          Loading Matches...
-        </Text>
-      </View>
-    );
+    return <MatchSkeleton />;
   }
 
   // 😎 Match Card
