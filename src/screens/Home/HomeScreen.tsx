@@ -4,6 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
+
+import HomeSkeleton from '../../components/HomeSkeleton';
+
 import {
   View,
   Text,
@@ -189,16 +192,18 @@ const HomeScreen = () => {
     },
   ];
 
-  // 😎 Loading
   if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-
-        <Text style={styles.loadingText}>Loading ...</Text>
-      </View>
-    );
-  }
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: COLORS.background,
+      }}
+    >
+      <HomeSkeleton />
+    </View>
+  );
+}
 
   return (
     <View
