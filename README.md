@@ -1,6 +1,4 @@
-1. Data show ho rha hai lekin matches delete krte hi vo sare player stats delete hone chahiye kyunki vo match exist hi nhi karta isliye
 
-2. Kitne matches me players ne batting ya bowling ki us hisaab se played match and bowliing matches count hona
 3. agar wicket catch out hai to catch krne vale player ke account me +1 catch and bowlers ke account me wkt +1 (✅❌)
 
 Batting Points

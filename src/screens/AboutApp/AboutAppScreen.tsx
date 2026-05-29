@@ -89,17 +89,52 @@ const AboutAppScreen = () => {
       >
         {/* 😎 Hero Section */}
         <Animated.View entering={FadeInUp.duration(700)}>
-          <Text
-            style={[
-              styles.mainTitle,
-              {
-                color: theme.text,
-                marginBottom: 2,
-              },
-            ]}
+          {/* Title Row with Version Badge */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+            }}
           >
-            About CrickStats
-          </Text>
+            <Text
+              style={[
+                styles.mainTitle,
+                {
+                  color: theme.text,
+                  marginBottom: 2,
+                  flex: 1,
+                },
+              ]}
+            >
+              About GCPL
+            </Text>
+
+            {/* Version Badge */}
+            <View
+              style={{
+                backgroundColor: '#00C2FF18',
+                borderColor: '#00F5FF',
+                borderWidth: 1,
+                borderRadius: 20,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                marginTop: 6,
+                marginLeft: 8,
+              }}
+            >
+              <Text
+                style={{
+                  color: '#00F5FF',
+                  fontSize: 16,
+                  fontWeight: '700',
+                  letterSpacing: 0.5,
+                }}
+              >
+                v1.1.1
+              </Text>
+            </View>
+          </View>
 
           <Text
             style={[
@@ -109,7 +144,7 @@ const AboutAppScreen = () => {
               },
             ]}
           >
-            Smart Cricket Management App
+            Gully Cricket Premier League
           </Text>
 
           <Text
@@ -400,7 +435,7 @@ const AboutAppScreen = () => {
               },
             ]}
           >
-            For Gully Cricket Lovers 
+            For Gully Cricket Lovers
           </Text>
         </Animated.View>
       </ScrollView>
