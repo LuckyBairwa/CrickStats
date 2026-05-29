@@ -13,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  
   StatusBar,
 } from 'react-native';
 
@@ -21,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useRoute, useNavigation } from '@react-navigation/native';
 
-import { PencilLine, Save, Download  } from 'lucide-react-native';
+import { PencilLine, Save, Download } from 'lucide-react-native';
 
 import Animated, {
   FadeInDown,
@@ -310,13 +309,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.background,
-    paddingTop: (StatusBar.currentHeight || 0)+10,
   },
 
   container: {
     flex: 1,
     backgroundColor: theme.background,
     paddingHorizontal: 16,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
   },
 
   glowCircle: {

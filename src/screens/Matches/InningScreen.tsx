@@ -426,9 +426,7 @@ const InningScreen = () => {
       } else {
         setSurvivorData(null);
         setIsRunOutFlow(false);
-        const isLastBallOfOver =
-          updated.legalBalls > prevBalls && updated.legalBalls % 6 === 0;
-        setAutoPosition(isLastBallOfOver ? 'nonStriker' : 'striker');
+        setAutoPosition('striker');
       }
 
       // 😎 OVER COMPLETE

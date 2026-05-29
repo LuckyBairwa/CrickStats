@@ -26,6 +26,7 @@ import {
   FileBadge,
   Zap,
   Ribbon,
+  ChartLine,
 } from 'lucide-react-native';
 
 import Animated, {
@@ -117,6 +118,7 @@ const DashboardScreen = () => {
   // 😎 Categories
   const categories = [
     'Most Runs',
+    'Most Strike Rate',
     'Most 6s',
     'Most 4s',
     'Most Wickets',
@@ -140,6 +142,11 @@ const DashboardScreen = () => {
       case 'Most Runs':
         return sorted.sort((a, b) =>
           withTiebreaker(a, b, (b?.runs || 0) - (a?.runs || 0)),
+        );
+
+      case 'Most Strike Rate':
+        return sorted.sort((a, b) =>
+          withTiebreaker(a, b, (b?.strikeRate || 0) - (a?.strikeRate || 0)),
         );
 
       case 'Most 6s':
@@ -193,6 +200,9 @@ const DashboardScreen = () => {
       case 'Most Runs':
         return `${player?.runs || 0} Runs`;
 
+      case 'Most Strike Rate':
+        return `${player?.strikeRate || 0} SR`;
+
       case 'Most 6s':
         return `${player?.sixes || 0} Sixes`;
 
@@ -227,6 +237,9 @@ const DashboardScreen = () => {
     switch (category) {
       case 'Most Runs':
         return CircleStar;
+
+      case 'Most Strike Rate':
+        return ChartLine;
 
       case 'Most 6s':
         return Zap;

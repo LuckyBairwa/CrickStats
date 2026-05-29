@@ -272,7 +272,7 @@ const completeOverIfNeeded = (
   if (inning.legalBalls > 0 && inning.legalBalls % 6 === 0) {
     saveOverHistory(inning, wicketData);
 
-    if (shouldSwapStrike && !inning.isSoloBatterMode && inning.nonStriker) {
+    if (shouldSwapStrike && !inning.isSoloBatterMode &&  inning.striker !== null &&  inning.nonStriker) {
       swapStrike(inning);
     }
   }

@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-
 import HomeSkeleton from '../../components/HomeSkeleton';
 
 import {
@@ -140,11 +139,15 @@ const HomeScreen = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchDashboard();
-    }, []),
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     fetchDashboard();
+  //   }, []),
+  // );
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
 
   // 😎 Greeting
   const greeting = useMemo(() => {
@@ -193,17 +196,17 @@ const HomeScreen = () => {
   ];
 
   if (loading) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: COLORS.background,
-      }}
-    >
-      <HomeSkeleton />
-    </View>
-  );
-}
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: COLORS.background,
+        }}
+      >
+        <HomeSkeleton />
+      </View>
+    );
+  }
 
   return (
     <View
